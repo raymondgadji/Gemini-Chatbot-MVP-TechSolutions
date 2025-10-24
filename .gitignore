@@ -1,0 +1,15 @@
+Fichiers à ignorer par Git (NE DOIVENT PAS ÊTRE PUBLIÉS)
+
+1. Variables d'environnement (contient la clé API)
+
+.env
+
+2. Environnement virtuel Python
+
+.venv/
+pycache/
+
+3. Fichiers de données temporaires ou de base de données locales (si utilisées)
+
+in_memory_db.json
+*.db
