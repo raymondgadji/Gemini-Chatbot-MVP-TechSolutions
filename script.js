@@ -1,36 +1,21 @@
-// L'URL de votre API FastAPI (ne pas l'oublier!)
-const API_URL = 'http://127.0.0.1:8000/api/chat';
-let sessionId = null; // Variable globale pour stocker l'identifiant de session
-
-// Fonction pour générer un UUID (identifiant unique universel)
-function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
-// Fonction pour initialiser la session
-function initializeSession() {
-    // 1. Essayer de récupérer l'ID de session stocké dans le navigateur
-    const storedId = localStorage.getItem('chatbot_session_id');
-    
-    if (storedId) {
-        sessionId = storedId;
-        console.log("Session ID récupéré:", sessionId);
-    } else {
-        // 2. Si aucun ID n'existe, en générer un nouveau et le stocker
-        sessionId = generateUUID();
-        localStorage.setItem('chatbot_session_id', sessionId);
-        console.log("Nouvel Session ID généré:", sessionId);
-    }
-}
-
+// La nouvelle URL de votre API déployée sur Render.
+const API_URL = 'https://max-chatbot-techsolutions-mvp.onrender.com/api/chat';
 
 // Fonction pour ouvrir/fermer le chat
 function toggleChat() {
     const chatWindow = document.getElementById('chat-window');
-    chatWindow.classList.toggle('hidden'); 
+    chatWindow.classList.toggle('hidden'); // toggle ajoute ou retire la classe
+}
+
+// Fonction pour générer un ID de session unique (stocké dans le navigateur)
+// Ce session_id est utilisé par le backend pour retrouver l'historique
+function getSessionId() {
+    let sessionId = localStorage.getItem('sessionId');
+    if (!sessionId) {
+        sessionId = 'session_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('sessionId', sessionId);
+    }
+    return sessionId;
 }
 
 // Fonction pour ajouter un message à l'interface
@@ -46,43 +31,40 @@ function appendMessage(sender, text) {
         messageDiv.classList.add('bot-message');
     }
     
-    // Remplacement des sauts de ligne par des balises <br> pour un meilleur rendu
-    const formattedText = text.replace(/\n/g, '<br>');
-    messageDiv.innerHTML = formattedText;
-    
+    messageDiv.innerText = text;
     chatBody.appendChild(messageDiv);
     
-    // Faire défiler vers le bas
+    // Faire défiler vers le bas pour voir le nouveau message
     chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-// Fonction principale pour envoyer le message
+// Fonction principale pour envoyer le message à l'API
 async function sendMessage() {
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-btn');
     const message = userInput.value.trim();
     
-    if (!message) return;
+    if (!message) return; // Ne rien faire si le message est vide
 
     // 1. Afficher le message de l'utilisateur et vider le champ
     appendMessage('user', message);
     userInput.value = '';
     
-    // 2. Désactiver le bouton
+    // 2. Désactiver le bouton pour indiquer le travail de l'IA
     sendButton.disabled = true;
     sendButton.innerText = '...'; 
 
     try {
-        // 3. Envoyer la requête POST à l'API Python
+        // 3. Envoyer la requête POST à l'API de production
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            // Le corps de la requête inclut le message ET le session_id
+            // On envoie le message ET le session_id pour la mémoire
             body: JSON.stringify({ 
                 message: message,
-                session_id: sessionId // <--- AJOUT CRUCIAL
+                session_id: getSessionId() // Le session ID est envoyé ici
             }),
         });
 
@@ -92,22 +74,22 @@ async function sendMessage() {
         appendMessage('bot', data.response);
 
     } catch (error) {
-        console.error('Erreur lors de la communication avec l\'API:', error);
-        appendMessage('bot', 'Désolé, je n\'arrive pas à me connecter au serveur API.');
+        console.error('Erreur lors de la communication avec l\'API de Production:', error);
+        appendMessage('bot', 'Désolé, je n\'arrive pas à me connecter au serveur API déployé.');
     } finally {
         // 5. Rétablir le bouton Send
         sendButton.disabled = false;
         sendButton.innerText = 'Send';
-        userInput.focus();
+        userInput.focus(); // Rétablit le focus sur le champ de saisie
     }
 }
 
-// Ajout des écouteurs d'événements et INITIALISATION DE LA SESSION
+// Ajout des écouteurs d'événements
 document.addEventListener('DOMContentLoaded', () => {
-    initializeSession(); // <-- Initialiser l'ID de session au chargement
-    
+    // 1. Écouter le clic sur le bouton "Send"
     document.getElementById('send-btn').addEventListener('click', sendMessage);
 
+    // 2. Écouter la touche "Entrée" dans le champ de saisie
     document.getElementById('user-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             sendMessage();
