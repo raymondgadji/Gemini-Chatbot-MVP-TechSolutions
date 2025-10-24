@@ -1,35 +1,39 @@
-# chatbot_api.py - AVEC GESTION DE LA MÉMOIRE DE CONVERSATION (Firestore)
 import os
-import json
 from dotenv import load_dotenv
 from google import genai
 from google.genai.errors import APIError
 
-# Pour l'API web et les modèles de données
+# Importation du contexte de connaissances de l'entreprise
+from context import CONTEXT_KNOWLEDGE
+
+# Pour la création de l'API web
 from fastapi import FastAPI
 from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware 
+from fastapi.middleware.cors import CORSMiddleware
+from typing import Dict, Any, List
 
-# Importation de la base de connaissances
-from context import CONTEXT_KNOWLEDGE 
+# --- Configuration de la base de données simulée pour la mémoire ---
+# ATTENTION: En production réelle, ceci doit être remplacé par Firestore.
+in_memory_db: Dict[str, List[Dict[str, str]]] = {} 
 
-# Importation des outils Firebase (simulés pour l'environnement Gemini)
-# En production réelle, ceci nécessiterait l'installation d'un SDK Python comme firebase-admin
-# Pour cet environnement, nous allons simuler les fonctions de Firestore (voir ci-dessous)
-# NOTE: Dans un vrai déploiement Python, vous utiliseriez firebase-admin ou un ORM.
-
-# --- Configuration de l'IA et de l'API ---
+# --- Configuration de l'IA ---
 
 load_dotenv()
 try:
+    # Le client cherche automatiquement la clé dans les variables d'environnement (GEMINI_API_KEY)
     client = genai.Client()
 except Exception as e:
     print(f"Erreur d'initialisation du client Gemini: {e}")
 
+# --- Définition de l'application FastAPI ---
+
 app = FastAPI()
 
-# Configuration CORS
-origins = ["*"]
+# Configuration CORS pour autoriser l'accès depuis le frontend
+origins = [
+    "*", # Important: En production, remplacez par l'URL exacte du client
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -38,94 +42,82 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 2. Modèle de données pour la requête (AJOUT DU session_id)
+# Modèle de données pour la requête (y compris l'ID de session pour la mémoire)
 class ChatRequest(BaseModel):
     message: str 
-    session_id: str # Clé pour stocker et récupérer la conversation
+    session_id: str # Clé pour maintenir l'historique de la conversation
 
-# --- FONCTIONS DE BASE DE DONNÉES (Simulation Firestore/Mémoire) ---
-# Dans un environnement de déploiement réel (ex: sur Render), vous utiliseriez 
-# le SDK Python de Firebase Admin. Ici, nous allons simuler un stockage simple
-# en mémoire pour le test local, en attendant le vrai déploiement.
-# NOTE PROFESSIONNELLE: Pour un vrai MVP, vous devez connecter une DB réelle (Firestore).
+# --- Fonctions de gestion de la mémoire ---
 
-# Dictionnaire simulant une base de données Firestore en mémoire (pour le test local)
-# Clé: session_id, Valeur: liste des messages
-# Format de l'historique: [{"role": "user", "text": "Salut"}, {"role": "model", "text": "Bonjour"}]
-in_memory_db = {}
-
-def get_chat_history(session_id: str) -> list:
-    """Récupère l'historique de conversation de la session."""
+def get_history(session_id: str) -> List[Dict[str, str]]:
+    """Récupère l'historique d'une session donnée depuis la base de données."""
     return in_memory_db.get(session_id, [])
 
-def save_turn(session_id: str, history: list):
-    """Sauvegarde le nouvel état de l'historique."""
-    in_memory_db[session_id] = history
-    # IMPORTANT: En production avec Firestore, cette fonction ferait un 'setDoc' ou 'updateDoc'.
+def save_turn(session_id: str, role: str, message: str):
+    """Sauvegarde un tour de conversation (utilisateur ou bot) dans la base de données."""
+    if session_id not in in_memory_db:
+        in_memory_db[session_id] = []
+    
+    # Limiter l'historique pour éviter des coûts trop élevés et des prompts trop longs
+    MAX_HISTORY_LENGTH = 10 # Garde les 5 derniers tours utilisateur/bot (10 messages)
+    
+    in_memory_db[session_id].append({"role": role, "text": message})
+    
+    # Appliquer la limite de taille
+    if len(in_memory_db[session_id]) > MAX_HISTORY_LENGTH:
+        in_memory_db[session_id] = in_memory_db[session_id][-MAX_HISTORY_LENGTH:]
 
 
-# 3. Route de l'API (AVEC MÉMOIRE)
+# 3. Route de l'API (Le "pont")
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
+    """
+    Route qui prend le message de l'utilisateur, gère l'historique, appelle l'IA et retourne la réponse.
+    """
     user_prompt = request.message
     session_id = request.session_id
-    
+
     # 1. Définir le rôle de l'IA (System Instruction)
     system_instruction_entreprise = (
-        "Vous êtes Max, un assistant virtuel amical et professionnel pour l'entreprise 'TechSolutions'. "
-        "Votre rôle est d'aider les clients avec les questions sur les produits, les services, et le support technique de TechSolutions. "
-        "Gardez les réponses concises et utiles. Ne mentionnez jamais que vous êtes un modèle "
-        "linguistique entraîné par Google. Répondez uniquement en français."
-        "Utilisez toujours la 'Base de Connaissances TechSolutions' fournie ci-dessous pour formuler vos réponses. "
-        "Si l'information n'est pas dans la base de connaissances, indiquez-le poliment et invitez l'utilisateur à contacter le support direct."
+        "Vous êtes Maître Max, un assistant virtuel professionnel et confidentiel du 'Cabinet APJ (Assistance Pro Juridique)'. "
+        "Votre rôle est d'aider les clients avec les questions initiales sur les domaines d'expertise, les tarifs et les processus du cabinet. "
+        "Utilisez un ton formel, courtois et très précis. Ne donnez jamais de conseil juridique direct ou de diagnostic de cas. "
+        "Répondez uniquement en français. Ne mentionnez jamais que vous êtes un modèle "
+        "linguistique entraîné par Google. "
+        "Utilisez toujours la 'Base de Connaissances Cabinet APJ' fournie ci-dessous pour formuler vos réponses. "
+        "Si l'information n'est pas dans la base de connaissances, indiquez poliment que cela nécessite une consultation directe avec un avocat."
     )
-    
-    # 2. Récupération de l'historique de la session
-    history = get_chat_history(session_id)
-    
-    # 3. CONTEXT INJECTION (Assemblage du Prompt pour Gemini)
-    
-    # Préparez la liste de contenu pour Gemini
-    # Gemini peut accepter une liste de messages passés pour maintenir le contexte.
-    
-    # (a) Créer la liste des contenus passés (historique + connaissance + nouveau message)
-    gemini_contents = []
-    
-    # Ajout de l'historique de la conversation (rôles 'user' et 'model')
-    for turn in history:
-        # NOTE: Le rôle du modèle est 'model' dans l'API Gemini
-        role = "user" if turn["role"] == "user" else "model"
-        gemini_contents.append({"role": role, "parts": [{"text": turn["text"]}]})
 
-    # Ajout du contexte RAG + du nouveau message de l'utilisateur
+    # 2. Récupérer l'historique
+    history = get_history(session_id)
     
-    # Le contexte RAG est ajouté au message utilisateur pour qu'il soit traité ensemble
-    # C'est une stratégie de "mémoire contextuelle"
-    full_user_prompt = f"{CONTEXT_KNOWLEDGE}\n\n--- QUESTION UTILISATEUR ---\n{user_prompt}"
+    # 3. Construire le prompt complet avec Contexte + Historique + Message Utilisateur
     
-    gemini_contents.append({"role": "user", "parts": [{"text": full_user_prompt}]})
+    # Créer le message de l'utilisateur avec le contexte des connaissances RAG
+    full_prompt = (
+        f"{system_instruction_entreprise}\n\n"
+        f"{CONTEXT_KNOWLEDGE}\n\n"
+        # Ajout de l'historique pour la mémoire
+        + "".join([f"{t['role'].capitalize()}: {t['text']}\n" for t in history])
+        + f"Utilisateur: {user_prompt}"
+    )
 
+    # Sauvegarder le message utilisateur (pour le prochain appel)
+    save_turn(session_id, "utilisateur", user_prompt)
     
     # --- Appel de l'IA ---
     try:
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            # ON ENVOIE TOUT L'HISTORIQUE PLUS LE NOUVEAU MESSAGE
-            contents=gemini_contents, 
-            config={"system_instruction": system_instruction_entreprise} 
+            contents=full_prompt
         )
         
         bot_response_text = response.text
         
-        # 4. Sauvegarde du nouveau tour de conversation
-        # Ajout du message de l'utilisateur (sans le contexte RAG)
-        history.append({"role": "user", "text": user_prompt}) 
-        # Ajout de la réponse du bot
-        history.append({"role": "model", "text": bot_response_text})
+        # Sauvegarder la réponse du bot
+        save_turn(session_id, "bot", bot_response_text)
         
-        save_turn(session_id, history)
-
-        # 5. Retourne la réponse
+        # Retourne le texte de la réponse
         return {"response": bot_response_text}
 
     except APIError as e:
