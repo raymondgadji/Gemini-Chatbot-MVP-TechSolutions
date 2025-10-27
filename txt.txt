@@ -2,3 +2,8 @@
 rgba(255, 0, 255, 0.3)violet fonçé
 #ff00ff;fuschia
 #FF00A6; rose vif
+
+git rm index.html # Supprime l'ancien index.html
+git add chatbot_ai_y.html site_index.html
+git commit -m "feat: Created professional AI_Y landing page and harmonized chatbot widget colors."
+git push origin main
