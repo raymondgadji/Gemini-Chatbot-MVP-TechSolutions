@@ -3,29 +3,317 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot MVP Frontend</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>AI_Y - Démonstration Chatbot IA</title>
+    <!-- Chargement de Tailwind CSS pour un style moderne -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5; /* Indigo-600 */
+            --secondary-color: #10b981; /* Emerald-500 */
+            --bg-color: #f3f4f6; /* Gray-100 */
+            --chat-bg-user: #e0f2f1; /* Emerald-50 */
+            --chat-bg-ai: #fff;
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 1.5rem;
+            overflow: hidden;
+            background-color: white;
+            transition: all 0.3s ease-in-out;
+        }
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 1.5rem 1.5rem 0 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        .chat-container {
+            height: 60vh; /* Vue plus grande pour le showcase */
+            overflow-y: auto;
+            padding: 1rem;
+            background-color: var(--bg-color);
+            scroll-behavior: smooth;
+        }
+        .message {
+            max-width: 85%;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 1rem;
+            line-height: 1.4;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .user-message {
+            background-color: var(--chat-bg-user);
+            color: #134e4a; /* Dark teal */
+            margin-left: auto;
+            border-bottom-right-radius: 0.25rem;
+        }
+        .ai-message {
+            background-color: var(--chat-bg-ai);
+            color: #1f2937; /* Gray-800 */
+            margin-right: auto;
+            border-bottom-left-radius: 0.25rem;
+        }
+        .input-area {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #e5e7eb;
+            background-color: white;
+        }
+        .input-area input {
+            flex-grow: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.75rem;
+            transition: border-color 0.2s;
+        }
+        .input-area input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        .input-area button {
+            margin-left: 0.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .input-area button:hover:not(:disabled) {
+            background-color: #3730a3; /* Indigo-700 */
+            transform: translateY(-1px);
+        }
+        .input-area button:disabled {
+            background-color: #9ca3af; /* Gray-400 */
+            cursor: not-allowed;
+        }
+        /* Style pour les messages de statut/erreur */
+        .status-message {
+            text-align: center;
+            padding: 0.5rem 0;
+            font-style: italic;
+            color: #6b7280; /* Gray-500 */
+        }
+        /* Animation de chargement */
+        .loading-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin: 0 2px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+    </style>
 </head>
 <body>
 
-    <button id="chat-widget-btn" onclick="toggleChat()">
-        💬
-    </button>
-
-    <div id="chat-window" class="hidden">
-        <div class="chat-header">
-            Hi ! I'm your virtual assistant, how can I help you today ?
-            <button class="close-btn" onclick="toggleChat()">Close</button>
-        </div>
-        <div id="chat-body" class="chat-body">
-            <div class="message bot-message">Hello ! Ask me anything about our services.</div>
-        </div>
-        <div class="chat-input">
-            <input type="text" id="user-input" placeholder="Type your message...">
-            <button id="send-btn">Send</button>
-        </div>
+<div class="container">
+    <div class="header">
+        <!-- Icône de l'IA (lucide-react - user-check) -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot"><path d="M12 11v-4"/><path d="M8 20l4-4 4 4"/><path d="M18 13c1.97 0 3.65-1.25 4.34-3A10 10 0 0 0 12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c1.7 0 3.32-0.45 4.74-1.25"/><path d="M16 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
+        <span>Yedidia | Assistant IA AI_Y</span>
+    </div>
+    
+    <div id="chat-container" class="chat-container">
+        <!-- Les messages du chat s'affichent ici -->
     </div>
 
-    <script src="script.js"></script>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Demandez-nous nos services ou nos prix..." autofocus>
+        <button id="send-button" disabled>Envoyer</button>
+    </div>
+</div>
+
+<script>
+    // --- Configuration ---
+    // URL de votre API FastAPI hébergée sur Render (doit être HTTPS pour la production)
+    const API_URL = "https://max-chatbot-techsolutions-mvp.onrender.com"; 
+
+    // Élément du DOM
+    const chatContainer = document.getElementById('chat-container');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+
+    // --- Gestion de la Session et de l'Historique ---
+    // Utiliser localStorage pour simuler la mémoire entre les rechargements de page
+    let sessionId = localStorage.getItem('ai_y_session_id') || crypto.randomUUID();
+    let chatHistory = JSON.parse(localStorage.getItem('ai_y_history') || '[]');
+    let isWaitingForResponse = false;
+
+    // Sauvegarder l'ID de session si c'est la première fois
+    localStorage.setItem('ai_y_session_id', sessionId);
+    
+    // --- Fonctions d'Affichage ---
+
+    function scrollToBottom() {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function createMessageElement(text, role, isMarkdown = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', role === 'user' ? 'user-message' : 'ai-message');
+        
+        // Simuler un rendu Markdown simple pour les retours à la ligne et les listes
+        let htmlText = text.replace(/\n\s*\*/g, (match) => `<br>•`).replace(/\n/g, '<br>');
+        
+        messageDiv.innerHTML = htmlText;
+        chatContainer.appendChild(messageDiv);
+        scrollToBottom();
+        return messageDiv;
+    }
+
+    function addLoadingIndicator() {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'loading-indicator';
+        loadingDiv.classList.add('ai-message', 'message');
+        loadingDiv.innerHTML = `
+            <div class="flex items-center space-x-1">
+                <span class="loading-dot"></span>
+                <span class="loading-dot"></span>
+                <span class="loading-dot"></span>
+            </div>
+        `;
+        chatContainer.appendChild(loadingDiv);
+        scrollToBottom();
+    }
+
+    function removeLoadingIndicator() {
+        const indicator = document.getElementById('loading-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+    
+    // --- Logique d'envoi du Message ---
+
+    async function sendMessage() {
+        if (isWaitingForResponse) return;
+        const message = userInput.value.trim();
+        if (message === "") return;
+
+        isWaitingForResponse = true;
+        sendButton.disabled = true;
+        userInput.value = '';
+        
+        // Afficher le message utilisateur immédiatement
+        createMessageElement(message, 'user');
+
+        // Ajouter l'indicateur de chargement
+        addLoadingIndicator();
+        
+        // Ajouter le message utilisateur à l'historique local pour l'envoi à l'API
+        const userTurn = { role: 'user', text: message };
+
+        try {
+            const payload = {
+                message: message,
+                session_id: sessionId,
+                history: chatHistory // Envoi de l'historique complet
+            };
+
+            const response = await fetch(`${API_URL}/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Erreur HTTP: ${response.status} - ${errorData.error}`);
+            }
+
+            const data = await response.json();
+            const aiResponseText = data.response;
+
+            removeLoadingIndicator();
+            
+            // Afficher la réponse de l'IA
+            createMessageElement(aiResponseText, 'ai');
+
+            // Mettre à jour l'historique après la réponse réussie
+            const modelTurn = { role: 'model', text: aiResponseText };
+            chatHistory.push(userTurn);
+            chatHistory.push(modelTurn);
+            localStorage.setItem('ai_y_history', JSON.stringify(chatHistory));
+
+        } catch (error) {
+            console.error("Erreur de l'API Chatbot:", error);
+            removeLoadingIndicator();
+            createMessageElement(`Désolé, une erreur de connexion est survenue. Le serveur est peut-être en redémarrage (Cold Start) ou hors ligne. Détails: ${error.message}`, 'ai');
+        } finally {
+            isWaitingForResponse = false;
+            sendButton.disabled = false;
+            userInput.focus();
+        }
+    }
+
+    // --- Initialisation ---
+    
+    // Restaurer l'historique
+    function initializeChat() {
+        if (chatHistory.length === 0) {
+            // Premier message d'accueil
+            const welcomeMessage = "Bonjour ! Je suis Yedidia, l'assistant commercial IA d'AI_Y. Je peux vous fournir nos tarifs, nos services, et vous expliquer comment nous intégrons votre chatbot en moins de 48 heures. Comment pouvons-nous démarrer un projet pour vous aujourd'hui ?";
+            createMessageElement(welcomeMessage, 'ai');
+            const welcomeTurn = { role: 'model', text: welcomeMessage };
+            chatHistory.push(welcomeTurn);
+            localStorage.setItem('ai_y_history', JSON.stringify(chatHistory));
+        } else {
+            // Recharger l'historique
+            chatHistory.forEach(turn => {
+                createMessageElement(turn.text, turn.role);
+            });
+            // Afficher le dernier message d'accueil si l'historique est long
+            if (chatHistory.length > 2) {
+                 createMessageElement("Re-bonjour ! Comment puis-je continuer à vous assister ?", 'ai');
+            }
+        }
+    }
+
+    // Événements
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // Assurer que le bouton est activé si l'utilisateur entre du texte
+    userInput.addEventListener('input', () => {
+        sendButton.disabled = userInput.value.trim() === '' || isWaitingForResponse;
+    });
+
+
+    // Démarrer l'application
+    initializeChat();
+
+</script>
+
 </body>
 </html>

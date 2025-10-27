@@ -1,133 +1,114 @@
+# chatbot_api.py
 import os
+import time
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from google import genai
-from google.genai.errors import APIError
-
-# Importation du contexte de connaissances de l'entreprise
-from context import CONTEXT_KNOWLEDGE
-
-# Pour la création de l'API web
-from fastapi import FastAPI
 from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, Any, List
+from context import CONTEXT
+import logging
 
-# --- Configuration de la base de données simulée pour la mémoire ---
-# ATTENTION: En production réelle, ceci doit être remplacé par Firestore.
-in_memory_db: Dict[str, List[Dict[str, str]]] = {} 
+# Configuration de la journalisation pour le débogage
+logging.basicConfig(level=logging.INFO)
 
-# --- Configuration de l'IA ---
+# --- Configuration de l'API ---
+app = FastAPI(title="AI_Y Chatbot API", version="1.0.0")
 
+# Charger la clé API depuis l'environnement (Render)
 load_dotenv()
-try:
-    # Le client cherche automatiquement la clé dans les variables d'environnement (GEMINI_API_KEY)
-    client = genai.Client()
-except Exception as e:
-    print(f"Erreur d'initialisation du client Gemini: {e}")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# --- Définition de l'application FastAPI ---
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY n'est pas configuré dans les variables d'environnement.")
 
-app = FastAPI()
+# Initialiser le client Gemini
+client = genai.Client(api_key=GEMINI_API_KEY)
 
-# Configuration CORS pour autoriser l'accès depuis le frontend
-origins = [
-    "*", # Important: En production, remplacez par l'URL exacte du client
-]
+# Définition du modèle de requête pour l'historique de conversation
+class ChatRequest(BaseModel):
+    message: str
+    session_id: str
+    history: list[dict] # L'historique des tours de conversation
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"], 
-    allow_headers=["*"],
+# --- Rôle et Contexte pour l'IA ---
+
+# 1. Définir le rôle de l'IA (System Instruction)
+system_instruction_entreprise = (
+    "Vous êtes Yedidia, l'assistant commercial virtuel d'AI_Y (Artificial Intelligence Yedidia). "
+    "Votre rôle principal est de présenter les services d'AI_Y, de rassurer le prospect, de fournir les tarifs clairs "
+    "et d'inviter à l'action ('démarrer un projet' ou 'demander une démo'). "
+    "Utilisez un ton amical, confiant, moderne et très orienté solution. "
+    "Répondez uniquement en français. Ne mentionnez jamais que vous êtes un modèle "
+    "linguistique entraîné par Google. "
+    "Utilisez toujours la 'Base de Connaissances Artificial Intelligence Yedidia (AI_Y)' fournie ci-dessous pour formuler vos réponses. "
+    "Si l'information n'est pas dans la base de connaissances (par exemple, pour des questions très techniques ou complexes), "
+    "indiquez poliment que cela nécessite de contacter directement un expert d'AI_Y."
 )
 
-# Modèle de données pour la requête (y compris l'ID de session pour la mémoire)
-class ChatRequest(BaseModel):
-    message: str 
-    session_id: str # Clé pour maintenir l'historique de la conversation
+# Construire la consigne finale envoyée à l'IA
+SYSTEM_INSTRUCTION_FINAL = f"""
+{system_instruction_entreprise}
 
-# --- Fonctions de gestion de la mémoire ---
+--- Base de Connaissances Artificial Intelligence Yedidia (AI_Y) ---
+{CONTEXT}
+"""
 
-def get_history(session_id: str) -> List[Dict[str, str]]:
-    """Récupère l'historique d'une session donnée depuis la base de données."""
-    return in_memory_db.get(session_id, [])
+# --- Routes de l'API ---
 
-def save_turn(session_id: str, role: str, message: str):
-    """Sauvegarde un tour de conversation (utilisateur ou bot) dans la base de données."""
-    if session_id not in in_memory_db:
-        in_memory_db[session_id] = []
-    
-    # Limiter l'historique pour éviter des coûts trop élevés et des prompts trop longs
-    MAX_HISTORY_LENGTH = 10 # Garde les 5 derniers tours utilisateur/bot (10 messages)
-    
-    in_memory_db[session_id].append({"role": role, "text": message})
-    
-    # Appliquer la limite de taille
-    if len(in_memory_db[session_id]) > MAX_HISTORY_LENGTH:
-        in_memory_db[session_id] = in_memory_db[session_id][-MAX_HISTORY_LENGTH:]
-
-
-# 3. Route de l'API (Le "pont")
-@app.post("/api/chat")
-async def chat_endpoint(request: ChatRequest):
-    """
-    Route qui prend le message de l'utilisateur, gère l'historique, appelle l'IA et retourne la réponse.
-    """
-    user_prompt = request.message
-    session_id = request.session_id
-
-    # 1. Définir le rôle de l'IA (System Instruction)
-    system_instruction_entreprise = (
-        "Vous êtes Maître Max, un assistant virtuel professionnel et confidentiel du 'Cabinet APJ (Assistance Pro Juridique)'. "
-        "Votre rôle est d'aider les clients avec les questions initiales sur les domaines d'expertise, les tarifs et les processus du cabinet. "
-        "Utilisez un ton formel, courtois et très précis. Ne donnez jamais de conseil juridique direct ou de diagnostic de cas. "
-        "Répondez uniquement en français. Ne mentionnez jamais que vous êtes un modèle "
-        "linguistique entraîné par Google. "
-        "Utilisez toujours la 'Base de Connaissances Cabinet APJ' fournie ci-dessous pour formuler vos réponses. "
-        "Si l'information n'est pas dans la base de connaissances, indiquez poliment que cela nécessite une consultation directe avec un avocat."
-    )
-
-    # 2. Récupérer l'historique
-    history = get_history(session_id)
-    
-    # 3. Construire le prompt complet avec Contexte + Historique + Message Utilisateur
-    
-    # Créer le message de l'utilisateur avec le contexte des connaissances RAG
-    full_prompt = (
-        f"{system_instruction_entreprise}\n\n"
-        f"{CONTEXT_KNOWLEDGE}\n\n"
-        # Ajout de l'historique pour la mémoire
-        + "".join([f"{t['role'].capitalize()}: {t['text']}\n" for t in history])
-        + f"Utilisateur: {user_prompt}"
-    )
-
-    # Sauvegarder le message utilisateur (pour le prochain appel)
-    save_turn(session_id, "utilisateur", user_prompt)
-    
-    # --- Appel de l'IA ---
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=full_prompt
-        )
-        
-        bot_response_text = response.text
-        
-        # Sauvegarder la réponse du bot
-        save_turn(session_id, "bot", bot_response_text)
-        
-        # Retourne le texte de la réponse
-        return {"response": bot_response_text}
-
-    except APIError as e:
-        print(f"Erreur d'API: {e}")
-        return {"response": "Désolé, une erreur de l'IA s'est produite. Veuillez réessayer plus tard."}
-    except Exception as e:
-        print(f"Erreur inattendue: {e}")
-        return {"response": "Désolé, une erreur interne du serveur s'est produite."}
-
-# Route de test simple (pour vérifier que l'API est en ligne)
 @app.get("/")
 def read_root():
-    return {"status": "API du Chatbot en cours d'exécution"}
+    """Route de vérification de l'état de l'API."""
+    return JSONResponse(content={"status": "API AI_Y en cours d'exécution", "model": "Gemini 2.5 Flash"})
+
+@app.post("/chat")
+async def chat_endpoint(request: ChatRequest):
+    """Route principale pour les requêtes de chat."""
+    try:
+        # 1. Préparer l'historique et la nouvelle requête
+        
+        # Le modèle Gemini utilise des rôles 'user' et 'model'.
+        # Nous reconstruisons l'historique dans ce format.
+        contents = []
+        for turn in request.history:
+            contents.append({
+                "role": "user" if turn["role"] == "user" else "model",
+                "parts": [{"text": turn["text"]}]
+            })
+            
+        # Ajouter le message utilisateur actuel
+        contents.append({
+            "role": "user",
+            "parts": [{"text": request.message}]
+        })
+
+        # 2. Configuration et Appel à l'IA
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=contents,
+            config={"system_instruction": SYSTEM_INSTRUCTION_FINAL}
+        )
+        
+        # 3. Réponse
+        ai_response_text = response.text
+        
+        return JSONResponse(content={
+            "response": ai_response_text,
+            "session_id": request.session_id # Renvoyer le même ID de session
+        })
+
+    except genai.errors.APIError as e:
+        logging.error(f"Gemini API Error: {e}")
+        return JSONResponse(
+            content={"error": "Erreur de l'API Gemini. Veuillez réessayer.", "details": str(e)},
+            status_code=500
+        )
+    except Exception as e:
+        logging.error(f"Internal Server Error: {e}")
+        return JSONResponse(
+            content={"error": "Erreur interne du serveur. Vérifiez les logs.", "details": str(e)},
+            status_code=500
+        )
+
+# Fix pour Render : le déploiement sur Render nécessite que l'application soit nommée 'app'
+# C'est implicitement géré par l'instance FastAPI ci-dessus.
