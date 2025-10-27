@@ -1,0 +1,4 @@
+#800080; violet clair
+rgba(255, 0, 255, 0.3)violet fonçé
+#ff00ff;fuschia
+#FF00A6; rose vif
