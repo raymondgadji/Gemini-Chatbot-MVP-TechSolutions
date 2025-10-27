@@ -8,14 +8,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* Nouvelle Palette de Couleurs AI_Y (Violet/Rose) */
         :root {
-            --primary-color: #0D47A1; /* Bleu Profond */
-            --secondary-color: #FFB300; /* Ambre Vif */
+            --primary-color: #9333ea; /* Violet Vif */
+            --secondary-color: #FF00A6; /* Rose Vif (Boutons CTA) */
             --text-color: #1f2937;
             --bg-dark: #1f2937;
         }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Montserrat', sans-serif;
             color: var(--text-color);
             background-color: white;
             scroll-behavior: smooth;
@@ -23,8 +24,10 @@
         .bg-primary { background-color: var(--primary-color); }
         .text-primary { color: var(--primary-color); }
         .bg-secondary { background-color: var(--secondary-color); }
-        .hover-bg-secondary:hover { background-color: #FFC107; } /* Ambre 600 */
+        /* Changement de couleur au survol pour le rose */
+        .hover-bg-secondary:hover { background-color: #CC0085; } 
         .border-primary { border-color: var(--primary-color); }
+        .border-secondary { border-color: var(--secondary-color); }
 
         /* Style pour les sections */
         section {
@@ -38,12 +41,12 @@
             right: 20px;
             z-index: 999;
             width: 380px;
-            height: 600px; /* Taille maximale du widget */
+            height: 600px;
             border: none;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             border-radius: 1rem;
-            display: none; /* Caché par défaut, géré par le script parent */
-            transition: opacity 0.3s ease-in-out;
+            display: none; /* Caché par défaut */
+            transition: all 0.3s ease-in-out;
         }
         
         /* Bouton de déclenchement du Chatbot (au niveau de la landing page) */
@@ -65,7 +68,7 @@
             transition: all 0.3s ease-in-out;
         }
         .chat-button-external:hover {
-            background-color: #1565C0;
+            background-color: #6d28d9; /* Violet légèrement plus foncé */
             transform: scale(1.05);
         }
     </style>
@@ -77,9 +80,9 @@
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <div class="text-2xl font-extrabold text-primary">AI_Y</div>
             <nav class="hidden md:flex space-x-6 text-gray-600">
-                <a href="#services" class="hover:text-primary">Services</a>
-                <a href="#about" class="hover:text-primary">À Propos</a>
-                <a href="#contact" class="hover:text-primary">Contact</a>
+                <a href="#services" class="hover:text-primary transition duration-150">Services</a>
+                <a href="#about" class="hover:text-primary transition duration-150">À Propos</a> <!-- CORRECTION #1 -->
+                <a href="#contact" class="hover:text-primary transition duration-150">Contact</a>
             </nav>
             <a href="#contact" class="bg-secondary text-white font-semibold py-2 px-4 rounded-lg hover-bg-secondary transition duration-300 shadow-md">Démarrer un Projet</a>
         </div>
@@ -147,6 +150,20 @@
             </div>
         </div>
     </section>
+    
+    <!-- Section À Propos (CORRECTION #1) -->
+    <section id="about" class="bg-gray-100">
+        <div class="container mx-auto px-6 max-w-4xl text-center">
+            <h2 class="text-4xl font-bold mb-6 text-primary">Notre Engagement : L'IA au Service des PME</h2>
+            <p class="text-xl text-gray-700 mb-4">
+                AI_Y (Artificial Intelligence Yedidia) est née de la conviction que l'IA conversationnelle ne doit pas être réservée aux grandes entreprises. Notre objectif est de démocratiser l'accès à des outils puissants, comme l'API Gemini 2.5 Flash, pour les PME. Nous garantissons une solution non seulement performante, mais aussi intégrée rapidement et gérée de manière transparente.
+            </p>
+            <p class="text-lg text-gray-600">
+                Chaque chatbot que nous déployons est conçu pour être un véritable atout commercial, libérant votre équipe des tâches répétitives pour qu'elle puisse se concentrer sur la croissance et la satisfaction client.
+            </p>
+        </div>
+    </section>
+
 
     <!-- Section Témoignage / Preuve Sociale (Optionnelle) -->
     <section class="bg-primary text-white">
@@ -210,42 +227,54 @@
         const openChatCTA = document.getElementById('open-chat-cta');
         let isChatOpen = false;
 
+        // Fonction pour ouvrir/fermer l'iframe et gérer les boutons
         function toggleChat() {
             isChatOpen = !isChatOpen;
             if (isChatOpen) {
+                // Ouvre l'iframe
+                chatbotIframe.style.opacity = '1';
+                chatbotIframe.style.pointerEvents = 'auto'; // Rends l'iframe cliquable
                 chatbotIframe.style.display = 'block';
+                // Cache le bouton flottant
                 chatButtonExternal.style.display = 'none';
             } else {
-                chatbotIframe.style.display = 'none';
+                // Ferme l'iframe
+                chatbotIframe.style.opacity = '0';
+                chatbotIframe.style.pointerEvents = 'none'; // Rend l'iframe non cliquable
+                // Affiche le bouton flottant
                 chatButtonExternal.style.display = 'flex';
+                
+                // Petit délai pour cacher complètement après la transition
+                setTimeout(() => {
+                    if (!isChatOpen) {
+                        chatbotIframe.style.display = 'none';
+                    }
+                }, 300);
             }
         }
         
+        // CORRECTION #2 : Initialisation pour garantir que l'iframe est masqué au début
+        chatbotIframe.style.display = 'none';
+        chatbotIframe.style.opacity = '0';
+        chatbotIframe.style.pointerEvents = 'none';
+
+
         // Clic sur le bouton flottant
         chatButtonExternal.addEventListener('click', toggleChat);
 
         // Clic sur les CTA dans le corps de la page
-        if (openChatHero) openChatHero.addEventListener('click', (e) => { e.preventDefault(); toggleChat(); });
-        if (openChatCTA) openChatCTA.addEventListener('click', (e) => { e.preventDefault(); toggleChat(); });
+        if (openChatHero) openChatHero.addEventListener('click', (e) => { e.preventDefault(); if (!isChatOpen) toggleChat(); });
+        if (openChatCTA) openChatCTA.addEventListener('click', (e) => { e.preventDefault(); if (!isChatOpen) toggleChat(); });
         
-        // Logique de masquage : Si l'utilisateur clique à l'intérieur de l'iframe, il reste ouvert.
-        // Si l'utilisateur clique sur le bouton de l'iframe, l'iframe envoie un message au parent.
+        // Logique de masquage : Écoute le signal de fermeture envoyé par l'iframe
         window.addEventListener('message', (event) => {
-            // Seule l'origine locale (file://) ou votre domaine Render est autorisée, mais pour un test local,
-            // on vérifie juste le type de message
-            if (event.data === 'close-chatbot') {
+            if (event.data === 'close-chatbot' && isChatOpen) {
                 toggleChat();
             }
         });
         
-        // Au chargement, le chatbot reste fermé, mais le bouton flottant est visible
-        chatbotIframe.style.display = 'none';
+        // Au chargement, le bouton flottant est visible
         chatButtonExternal.style.display = 'flex';
-        
-        // Petit hack : Si le chatbot a été fermé de l'intérieur, le bouton réapparaît
-        // Le chatbot lui-même contient la logique pour sa propre fermeture interne
-        
-        // NOTE: L'iframe charge le contenu de 'chatbot_ai_y.html'
     </script>
 
 </body>

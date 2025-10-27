@@ -8,60 +8,39 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        /* Nouvelle Palette de Couleurs AI_Y */
+        /* Nouvelle Palette de Couleurs AI_Y (Violet/Rose) */
         :root {
-            --primary-color: #0D47A1; /* Bleu Profond */
-            --secondary-color: #FFB300; /* Ambre Vif */
+            --primary-color: #9333ea; /* Violet Vif */
+            --secondary-color: #FF00A6; /* Rose Vif (Boutons CTA) */
             --bg-color: #f3f4f6; /* Gris Clair pour le fond du chat */
-            --chat-bg-user: #e3f2fd; /* Bleu très clair */
+            --chat-bg-user: #f3e8ff; /* Violet très clair */
             --chat-bg-ai: #fff;
         }
         
         .chat-widget-container {
-            /* Le conteneur principal du chatbot, positionné en bas à droite */
+            /* Fix pour garantir que le conteneur utilise FLEXBOX en colonne pour un alignement correct */
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 0px;
+            right: 0px;
             z-index: 1000;
-            width: 380px;
+            width: 100%;
+            height: 100%;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             border-radius: 1rem;
             overflow: hidden;
             background-color: white;
-            display: none; /* Caché par défaut */
-            transition: all 0.3s ease-in-out;
-            max-height: 85vh;
-        }
-
-        .chat-widget-container.open {
+            
+            /* Clé pour l'alignement : Stack les enfants verticalement et s'assurer qu'il prend 100% de la hauteur */
             display: flex;
             flex-direction: column;
-        }
-
-        .chat-button {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1001;
-            background-color: var(--primary-color);
-            color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            max-height: 100vh; /* Utilise 100vh pour garantir que le conteneur ne dépasse pas */
+            min-height: 100%; /* S'assure qu'il remplit la zone de l'iframe */
             transition: all 0.3s ease-in-out;
-        }
-
-        .chat-button:hover {
-            background-color: #1565C0; /* Bleu légèrement plus clair */
-            transform: scale(1.05);
         }
 
         .chat-header {
+            /* Le header doit avoir une hauteur fixe */
+            flex-shrink: 0; 
             background-color: var(--primary-color);
             color: white;
             padding: 1rem;
@@ -75,11 +54,14 @@
         }
         
         .chat-container {
+            /* CORRECTION : Laisse le corps du chat prendre tout l'espace restant */
             flex-grow: 1;
             overflow-y: auto;
             padding: 1rem;
             background-color: var(--bg-color);
             scroll-behavior: smooth;
+            /* Utilise 'auto' et non 'scroll' pour éviter l'apparition de la barre de scroll si inutile */
+            overflow-y: auto; 
         }
 
         .message {
@@ -107,6 +89,8 @@
         }
 
         .input-area {
+            /* Le pied de page/input doit avoir une hauteur fixe */
+            flex-shrink: 0;
             display: flex;
             padding: 1rem;
             border-top: 1px solid #e5e7eb;
@@ -150,22 +134,19 @@
 </head>
 <body>
 
-<!-- Bouton d'ouverture du Chatbot -->
-<div id="chat-button" class="chat-button">
-    <!-- Icône de Chat (lucide-react - MessageSquare) -->
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-</div>
+<!-- Le bouton est désactivé dans l'iframe, le parent le gère -->
+<div id="chat-button" class="chat-button"></div>
 
-<!-- Conteneur du Chatbot -->
-<div id="chat-widget-container" class="chat-widget-container">
+<!-- Conteneur du Chatbot (utilisé pour prendre toute la place de l'iframe) -->
+<div id="chat-widget-container" class="chat-widget-container open">
     <div class="chat-header" id="chat-header-toggle">
         <div class="flex items-center gap-2">
             <!-- Icône de l'IA (lucide-react - bot) -->
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot"><path d="M12 11v-4"/><path d="M8 20l4-4 4 4"/><path d="M18 13c1.97 0 3.65-1.25 4.34-3A10 10 0 0 0 12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c1.7 0 3.32-0.45 4.74-1.25"/><path d="M16 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
             <span>Yedidia | Assistant AI_Y</span>
         </div>
-        <!-- Icône pour fermer (lucide-react - minus) -->
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus"><path d="M5 12h14"/></svg>
+        <!-- Icône pour fermer (lucide-react - minus). Envoie un signal au parent pour fermer l'iframe. -->
+        <svg xmlns="http://www.w3.org/2000/svg" id="close-button-internal" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus cursor-pointer"><path d="M5 12h14"/></svg>
     </div>
     
     <div id="chat-container" class="chat-container">
@@ -187,29 +168,13 @@
     const chatContainer = document.getElementById('chat-container');
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
-    const chatButton = document.getElementById('chat-button');
-    const chatWidget = document.getElementById('chat-widget-container');
-    const chatHeaderToggle = document.getElementById('chat-header-toggle');
+    const closeButtonInternal = document.getElementById('close-button-internal');
 
-    // --- Gestion du Widget (Ouverture/Fermeture) ---
-    let isWidgetOpen = false;
-
-    function toggleWidget() {
-        isWidgetOpen = !isWidgetOpen;
-        if (isWidgetOpen) {
-            chatWidget.classList.add('open');
-            chatButton.style.display = 'none';
-            scrollToBottom();
-            userInput.focus();
-        } else {
-            chatWidget.classList.remove('open');
-            chatButton.style.display = 'flex';
-        }
-    }
-
-    chatButton.addEventListener('click', toggleWidget);
-    chatHeaderToggle.addEventListener('click', toggleWidget);
-
+    // --- Gestion de la Fermeture (Envoi d'un signal au parent) ---
+    closeButtonInternal.addEventListener('click', () => {
+        // Envoie un message au script parent (site_index.html) pour fermer l'iframe
+        window.parent.postMessage('close-chatbot', '*');
+    });
 
     // --- Logique d'envoi du Message ---
     let sessionId = localStorage.getItem('ai_y_session_id') || crypto.randomUUID();
@@ -219,7 +184,10 @@
     localStorage.setItem('ai_y_session_id', sessionId);
 
     function scrollToBottom() {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        // Ajout d'un petit délai pour s'assurer que le DOM a bien mis à jour
+        setTimeout(() => {
+             chatContainer.scrollTop = chatContainer.scrollHeight;
+        }, 10);
     }
 
     function createMessageElement(text, role) {
@@ -325,9 +293,7 @@
             chatHistory.forEach(turn => {
                 createMessageElement(turn.text, turn.role);
             });
-             if (isWidgetOpen) {
-                 scrollToBottom();
-             }
+            scrollToBottom();
         }
     }
 
@@ -342,7 +308,7 @@
         sendButton.disabled = userInput.value.trim() === '' || isWaitingForResponse;
     });
 
-    // Démarre l'application (le widget reste fermé jusqu'à ce que l'utilisateur clique)
+    // Démarre l'application
     initializeChat();
 
 </script>
