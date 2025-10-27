@@ -3,6 +3,7 @@ import os
 import time
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware # NOUVEL IMPORT
 from dotenv import load_dotenv
 from google import genai
 from pydantic import BaseModel
@@ -15,12 +16,27 @@ logging.basicConfig(level=logging.INFO)
 # --- Configuration de l'API ---
 app = FastAPI(title="AI_Y Chatbot API", version="1.0.0")
 
+# --- CORRIGÉ : Ajout du middleware CORS ---
+# Permet à n'importe quel domaine (y compris le fichier local file://) d'accéder à l'API.
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # Autorise toutes les méthodes (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"],
+)
+# --- FIN du CORRIGÉ CORS ---
+
+
 # Charger la clé API depuis l'environnement (Render)
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY n'est pas configuré dans les variables d'environnement.")
+    # Ceci ne devrait arriver que si la variable n'est pas sur Render
+    pass
 
 # Initialiser le client Gemini
 client = genai.Client(api_key=GEMINI_API_KEY)
@@ -109,6 +125,3 @@ async def chat_endpoint(request: ChatRequest):
             content={"error": "Erreur interne du serveur. Vérifiez les logs.", "details": str(e)},
             status_code=500
         )
-
-# Fix pour Render : le déploiement sur Render nécessite que l'application soit nommée 'app'
-# C'est implicitement géré par l'instance FastAPI ci-dessus.
