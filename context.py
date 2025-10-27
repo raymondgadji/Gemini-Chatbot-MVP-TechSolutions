@@ -29,7 +29,7 @@ Le modèle de tarification est basé sur deux composantes : l'installation uniqu
 
 ## 4. PROCESSUS DE TRAVAIL
 
-- **Délai de Mise en Œuvre :** 48 heures après l'approbation de l'offre et la fourniture de la base de connaissances client (FAQ, documents produits, etc.).
+- **Délai de Mise en Œuvre :** 72 heures après l'approbation de l'offre et la fourniture de la base de connaissances client (FAQ, documents produits, etc.).
 - **Technologie :** Utilisation de l'API Gemini 2.5 Flash de Google pour la vitesse et l'efficacité, hébergée sur des infrastructures cloud professionnelles (Render).
 """
 
