@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot MVP Frontend</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <button id="chat-widget-btn" onclick="toggleChat()">
+        💬
+    </button>
+
+    <div id="chat-window" class="hidden">
+        <div class="chat-header">
+            Hi ! I'm your virtual assistant, how can I help you today ?
+            <button class="close-btn" onclick="toggleChat()">Close</button>
+        </div>
+        <div id="chat-body" class="chat-body">
+            <div class="message bot-message">Hello ! Ask me anything about our services.</div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
