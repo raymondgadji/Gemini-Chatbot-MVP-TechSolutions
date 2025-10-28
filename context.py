@@ -19,7 +19,7 @@ CONTEXT = """
 Le modèle de tarification est basé sur deux composantes : l'installation unique et l'abonnement mensuel de maintenance.
 
 - **Frais d'Installation (One-time Setup) :** 750€ HT. Ce montant couvre l'analyse du besoin, l'adaptation du contexte, la configuration du rôle de l'IA et l'intégration du code.
-- **Abonnement Mensuel (Récurrent) :** 99€ HT / mois. Cet abonnement inclut l'hébergement de l'API 24/7, la maintenance, et un forfait de 5 000 requêtes (messages clients) par mois.
+- **Abonnement Mensuel (Récurrent) :** 99,99€ HT / mois. Cet abonnement inclut l'hébergement de l'API 24/7, la maintenance, et un forfait de 5 000 requêtes (messages clients) par mois.
 - **Messages Supplémentaires :** 0.005€ par message au-delà du forfait mensuel.
 
 ## 3. GARANTIE DE SERVICE (SLA)
@@ -30,7 +30,7 @@ Le modèle de tarification est basé sur deux composantes : l'installation uniqu
 ## 4. PROCESSUS DE TRAVAIL
 
 - **Délai de Mise en Œuvre :** 72 heures après l'approbation de l'offre et la fourniture de la base de connaissances client (FAQ, documents produits, etc.).
-- **Technologie :** Utilisation de l'API Gemini 2.5 Flash de Google pour la vitesse et l'efficacité, hébergée sur des infrastructures cloud professionnelles (Render).
+- **Technologie :** Utilisation de l'API Gemini 2.5 Flash de Google pour la vitesse et l'efficacité, hébergée sur des infrastructures cloud professionnelles.
 """
 
 

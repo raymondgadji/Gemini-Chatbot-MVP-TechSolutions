@@ -143,7 +143,7 @@
         <div class="flex items-center gap-2">
             <!-- Icône de l'IA (lucide-react - bot) -->
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot"><path d="M12 11v-4"/><path d="M8 20l4-4 4 4"/><path d="M18 13c1.97 0 3.65-1.25 4.34-3A10 10 0 0 0 12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c1.7 0 3.32-0.45 4.74-1.25"/><path d="M16 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
-            <span>Yedidia | Assistant AI_Y</span>
+            <span>Yedi | Votre assistant AI_Y</span>
         </div>
         <!-- Icône pour fermer (lucide-react - minus). Envoie un signal au parent pour fermer l'iframe. -->
         <svg xmlns="http://www.w3.org/2000/svg" id="close-button-internal" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus cursor-pointer"><path d="M5 12h14"/></svg>
@@ -284,7 +284,7 @@
     
     function initializeChat() {
         if (chatHistory.length === 0) {
-            const welcomeMessage = "Bonjour ! Je suis Yedidia, l'assistant commercial IA d'AI_Y. Je peux vous fournir nos tarifs, nos services, et vous expliquer comment nous intégrons votre chatbot en moins de 72 heures. Comment pouvons-nous démarrer un projet pour vous aujourd'hui ?";
+            const welcomeMessage = "Bonjour ! Je suis Yedi, l'assistant commercial IA d'AI_Y. Je peux vous fournir nos tarifs, nos services, et vous expliquer comment nous intégrons votre chatbot en moins de 72 heures. Comment pouvons-nous démarrer un projet pour vous aujourd'hui ?";
             createMessageElement(welcomeMessage, 'ai');
             const welcomeTurn = { role: 'model', text: welcomeMessage };
             chatHistory.push(welcomeTurn);
