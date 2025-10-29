@@ -7,16 +7,13 @@ const spinner = document.getElementById('spinner');
 const errorMessageDiv = document.getElementById('error-message');
 
 // === CONFIGURATION ===
-const API_URL = "https://max-chatbot-techsolutions-mvp.onrender.com/chat";  // TON URL RENDER
+const API_URL = "https://max-chatbot-techsolutions-mvp.onrender.com/chat";
 const SESSION_ID = "local_" + Date.now();
 
-// Historique (user/model)
 let history = [];
 
 // === FONCTIONS UTILITAIRES ===
-const formatTimestamp = () => {
-    return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-};
+const formatTimestamp = () => new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
 const escapeHtml = (text) => {
     const div = document.createElement('div');
@@ -25,7 +22,6 @@ const escapeHtml = (text) => {
 };
 
 const addMessage = (text, sender) => {
-    const message = { text, sender, timestamp: new Date() };
     const isUser = sender === 'user';
     const containerClass = isUser ? 'user-message-container' : 'bot-message-container';
     const bubbleClass = isUser ? 'user-message-bubble' : 'bot-message-bubble';
@@ -39,61 +35,21 @@ const addMessage = (text, sender) => {
         </div>
     `;
     chatMessages.insertAdjacentHTML('beforeend', html);
-    scrollToBottom();
-};
-
-const scrollToBottom = () => {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 };
 
-const displayError = (msg) => {
-    errorMessageDiv.textContent = msg;
-    errorMessageDiv.classList.remove('hidden');
-    setTimeout(() => errorMessageDiv.classList.add('hidden'), 5000);
-};
-
-// === Fallback Réponses (basées sur context.py) ===
-const getFallbackResponse = (message) => {
-    const lower = message.toLowerCase();
-    if (lower.includes('bonjour') || lower.includes('salut')) {
-        return "Bonjour ! Ravi de vous rencontrer. En quoi puis-je vous aider avec les chatbots IA d'AI_Y aujourd'hui ?";
-    }
-    if (lower.includes('prix') || lower.includes('tarif')) {
-        return "Nos tarifs : Installation 750€ HT une fois, puis 99,99€ HT/mois (5 000 messages inclus). Messages supp. : 0,005€.";
-    }
-    if (lower.includes('délai') || lower.includes('temps')) {
-        return "Mise en œuvre en 72h ! Fournissez votre FAQ et c'est prêt.";
-    }
-    if (lower.includes('contact')) {
-        return "Contactez-nous pour une démo gratuite : contact@ai-y.fr ou 'Démarrer un projet' sur le site.";
-    }
-    return "Je suis Yedi d'AI_Y. Posez-moi une question sur nos chatbots pour PME ! (API temporairement indisponible)";
-};
-
-// === APPEL À TON API FASTAPI ===
-const sendToAPI = async (message, retryCount = 0) => {
+// === APPEL API ===
+const sendToAPI = async (message, retries = 0) => {
     history.push({ role: "user", text: message });
 
     try {
         const response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                message: message,
-                session_id: SESSION_ID,
-                history: history
-            })
+            body: JSON.stringify({ message, session_id: SESSION_ID, history })
         });
 
-        console.log(`API Response Status: ${response.status}`);  // Debug
-
-        if (!response.ok) {
-            if (response.status === 429 && retryCount < 2) {
-                await new Promise(r => setTimeout(r, 2000 * (retryCount + 1)));
-                return sendToAPI(message, retryCount + 1);
-            }
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const data = await response.json();
         if (data.error) throw new Error(data.error);
@@ -103,16 +59,16 @@ const sendToAPI = async (message, retryCount = 0) => {
         return botResponse;
 
     } catch (err) {
-        console.error("API Error Details:", err);
-        if (retryCount < 2) {
-            await new Promise(r => setTimeout(r, 1000 * (retryCount + 1)));
-            return sendToAPI(message, retryCount + 1);
+        console.error("API Error:", err);
+        if (retries < 2) {
+            await new Promise(r => setTimeout(r, 1500 * (retries + 1)));
+            return sendToAPI(message, retries + 1);
         }
-        return getFallbackResponse(message);  // Fallback si API down
+        return "Désolé, je rencontre un problème de connexion. Réessayez dans un instant.";
     }
 };
 
-// === ENVOI MESSAGE ===
+// === ENVOI ===
 const handleSend = async () => {
     const prompt = userInput.value.trim();
     if (!prompt) return;
@@ -137,7 +93,7 @@ const handleSend = async () => {
 
 // === ÉVÉNEMENTS ===
 sendButton.addEventListener('click', handleSend);
-userInput.addEventListener('keypress', (e) => {
+userInput.addEventListener('keypress', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         handleSend();
