@@ -1,0 +1,375 @@
+/* === POLICE MONTSERRAT (LOCAL) === */
+@font-face {
+    font-family: 'Montserrat';
+    src: url('fonts/montserrat/Montserrat-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Montserrat';
+    src: url('fonts/montserrat/Montserrat-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Montserrat';
+    src: url('fonts/montserrat/Montserrat-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Montserrat';
+    src: url('fonts/montserrat/Montserrat-ExtraBold.ttf') format('truetype');
+    font-weight: 800;
+    font-style: normal;
+}
+
+/* === VARIABLES COULEURS === */
+:root {
+    --primary: #800080;
+    --secondary: #ff00ff;
+    --text: #1f2937;
+    --bg-dark: #1f2937;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --hover-fuschia: #CC0085;
+}
+
+/* === BASE === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--text);
+    background-color: white;
+    line-height: 1.6;
+    scroll-behavior: smooth;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+section {
+    padding: 80px 0;
+}
+
+/* === HEADER === */
+.header {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+.header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+}
+.logo {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+.nav {
+    display: none;
+    gap: 2rem;
+}
+.nav a {
+    color: var(--gray-600);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+.nav a:hover {
+    color: var(--primary);
+}
+.btn-cta {
+    background: var(--secondary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background 0.3s;
+}
+.btn-cta:hover {
+    background: var(--hover-fuschia);
+}
+
+/* === HERO === */
+.hero {
+    background: var(--gray-50);
+    padding-top: 120px;
+    padding-bottom: 100px;
+}
+.hero-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+}
+.hero-text h1 {
+    font-size: 2.8rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    color: var(--gray-900);
+}
+.hero-text h1 .text-primary {
+    color: var(--primary);
+}
+.hero-text p {
+    font-size: 1.2rem;
+    color: var(--gray-600);
+    margin-bottom: 2rem;
+}
+.hero-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: background 0.3s;
+}
+.btn-primary:hover {
+    background: var(--secondary);
+}
+.btn-outline {
+    background: white;
+    color: var(--primary);
+    padding: 0.75rem 2rem;
+    border: 2px solid var(--primary);
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s;
+}
+.btn-outline:hover {
+    background: #f3f4f6;
+}
+.hero-illustration {
+    text-align: center;
+}
+.icon-robot {
+    color: var(--primary);
+    opacity: 0.8;
+}
+
+/* === SERVICES === */
+.services-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+.service-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-top: 4px solid var(--primary);
+    transition: transform 0.3s;
+}
+.service-card:hover {
+    transform: scale(1.02);
+}
+.service-icon {
+    color: var(--secondary);
+    margin-bottom: 1rem;
+}
+.service-card h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+.service-card p {
+    color: var(--gray-600);
+}
+
+/* === ABOUT === */
+.about {
+    background: var(--gray-100);
+    text-align: center;
+}
+.about-inner {
+    max-width: 800px;
+    margin: 0 auto;
+}
+.about-text {
+    font-size: 1.25rem;
+    color: var(--gray-700);
+    margin-bottom: 1rem;
+}
+.about-subtext {
+    color: var(--gray-600);
+    font-size: 1.1rem;
+}
+
+/* === CTA === */
+.cta {
+    background: var(--primary);
+    color: white;
+    text-align: center;
+}
+.cta-inner {
+    max-width: 700px;
+    margin: 0 auto;
+}
+.cta h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+.cta p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+}
+.btn-cta-inverse {
+    background: var(--secondary);
+    color: #1a1a1a;
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: background 0.3s;
+}
+.btn-cta-inverse:hover {
+    background: var(--hover-fuschia);
+}
+
+/* === CONTACT === */
+.contact-subtitle {
+    max-width: 600px;
+    margin: 0 auto 3rem;
+    color: var(--gray-600);
+    text-align: center;
+}
+.contact-form-wrapper {
+    max-width: 500px;
+    margin: 0 auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    border: 1px solid #e5e7eb;
+}
+.form-group {
+    margin-bottom: 1.5rem;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-family: inherit;
+    transition: border 0.3s;
+}
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(128, 0, 128, 0.1);
+}
+.btn-submit {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    padding: 0.875rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.btn-submit:hover {
+    background: var(--secondary);
+}
+
+/* === FOOTER === */
+.footer {
+    background: var(--bg-dark);
+    color: white;
+    text-align: center;
+    padding: 2rem 0;
+    margin-top: 4rem;
+}
+.footer p {
+    color: #9ca3af;
+    font-size: 0.95rem;
+}
+
+/* === CHATBOT === */
+#chatbot-iframe {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999;
+    width: 380px;
+    height: 600px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border-radius: 1rem;
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease-in-out;
+}
+.chat-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: var(--primary);
+    color: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: all 0.3s ease-in-out;
+}
+.chat-button:hover {
+    background: var(--hover-fuschia);
+    transform: scale(1.05);
+}
+
+/* === RESPONSIVE === */
+@media (min-width: 768px) {
+    .nav { display: flex; }
+    .hero-grid { grid-template-columns: 1fr 1fr; }
+    .services-grid { grid-template-columns: repeat(3, 1fr); }
+    .hero-text h1 { font-size: 3.5rem; }
+}

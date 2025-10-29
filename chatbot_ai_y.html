@@ -3,315 +3,528 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI_Y Chatbot Widget</title>
-    <!-- Chargement de Tailwind CSS pour un style moderne -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Widget de Chat IA</title>
+    <!-- Le code utilise désormais du CSS standard, plus besoin de Tailwind -->
     <style>
-        /* Nouvelle Palette de Couleurs AI_Y (Violet/Rose) */
-        :root {
-            --primary-color: #800080; /* Violet Vif */
-            --secondary-color: #ff00ff; /* Rose Vif (Boutons CTA) */
-            --bg-color: #f3f4f6; /* Gris Clair pour le fond du chat */
-            --chat-bg-user: #f3e8ff; /* Violet très clair */
-            --chat-bg-ai: #fff;
-        }
-        
-        .chat-widget-container {
-            /* Fix pour garantir que le conteneur utilise FLEXBOX en colonne pour un alignement correct */
-            position: fixed;
-            bottom: 0px;
-            right: 0px;
-            z-index: 1000;
-            width: 100%;
-            height: 100%;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            border-radius: 1rem;
-            overflow: hidden;
-            background-color: white;
-            
-            /* Clé pour l'alignement : Stack les enfants verticalement et s'assurer qu'il prend 100% de la hauteur */
-            display: flex;
-            flex-direction: column;
-            max-height: 100vh; /* Utilise 100vh pour garantir que le conteneur ne dépasse pas */
-            min-height: 100%; /* S'assure qu'il remplit la zone de l'iframe */
-            transition: all 0.3s ease-in-out;
-        }
-
-        .chat-header {
-            /* Le header doit avoir une hauteur fixe */
-            flex-shrink: 0; 
-            background-color: var(--primary-color);
-            color: white;
-            padding: 1rem;
+        /* Configuration de la police Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f3f4f6; /* bg-gray-100 */
             display: flex;
             align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem; /* p-4 */
+            margin: 0;
+        }
+
+        /* Conteneur principal du Chat Widget */
+        #chat-container {
+            width: 100%;
+            max-width: 512px; /* max-w-lg */
+            background-color: white;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* shadow-2xl */
+            border-radius: 0.75rem; /* rounded-xl */
+            display: flex;
+            flex-direction: column;
+            height: 80vh; /* h-[80vh] */
+            min-height: 500px;
+        }
+
+        /* En-tête */
+        #chat-header {
+            background-color: #800080; 
+            color: white;
+            padding: 1rem; /* p-4 */
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
+            display: flex;
             justify-content: space-between;
-            gap: 12px;
-            font-size: 1rem;
-            font-weight: 600;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* shadow-md */
+        }
+        #chat-header h1 {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 700; /* font-bold */
+            display: flex;
+            align-items: center;
+        }
+        #chat-header svg {
+            width: 1.5rem; /* w-6 */
+            height: 1.5rem; /* h-6 */
+            margin-right: 0.5rem; /* mr-2 */
+        }
+        #user-id-display {
+            font-size: 0.75rem; /* text-xs */
+            opacity: 0.7; /* opacity-70 */
+        }
+
+        /* Zone des messages */
+        #chat-messages {
+            flex-grow: 1; /* flex-grow */
+            padding: 1rem; /* p-4 */
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem; /* space-y-4 */
+            scrollbar-width: thin;
+            scrollbar-color: #9ca3af #f3f4f6;
+        }
+        /* Custom scrollbar style */
+        #chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        #chat-messages::-webkit-scrollbar-track {
+            background: #f3f4f6;
+        }
+        #chat-messages::-webkit-scrollbar-thumb {
+            background-color: #9ca3af;
+            border-radius: 20px;
+            border: 2px solid #f3f4f6;
+        }
+
+        /* Message Conteneur Général (flex) */
+        .message-container {
+            display: flex;
+        }
+
+        /* Message du Bot */
+        .bot-message-container {
+            justify-content: flex-start; /* justify-start */
+        }
+        .bot-message-bubble {
+            background-color: #f3f4f6; /* light gray for bot */
+            padding: 0.75rem; /* p-3 */
+            max-width: 80%; /* max-w-xs/sm:max-w-md */
+            border-radius: 0.75rem;
+            border-bottom-right-radius: 0.25rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            margin-right: auto; /* mr-auto */
+            word-wrap: break-word;
+        }
+
+        /* Message de l'Utilisateur */
+        .user-message-container {
+            justify-content: flex-end; /* justify-end */
+        }
+        .user-message-bubble {
+            background-color: #ff00ff; /* blue for user */
+            color: white;
+            padding: 0.75rem; /* p-3 */
+            max-width: 80%; /* max-w-xs/sm:max-w-md */
+            border-radius: 0.75rem;
+            border-bottom-left-radius: 0.25rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            margin-left: auto; /* ml-auto */
+            word-wrap: break-word;
+        }
+
+        .message-text {
+            font-size: 0.875rem; /* text-sm */
+            margin-bottom: 0.25rem;
+        }
+
+        .message-timestamp {
+            font-size: 0.75rem; /* text-xs */
+            margin-top: 0.25rem; /* mt-1 */
+            text-align: right;
+        }
+        .bot-message-bubble .message-timestamp {
+            color: #6b7280; /* text-gray-500 */
+        }
+        .user-message-bubble .message-timestamp {
+            opacity: 0.8; /* opacity-80 */
+        }
+
+        /* Zone d'entrée */
+        #input-area {
+            padding: 1rem; /* p-4 */
+            border-top: 1px solid #e5e7eb; /* border-t border-gray-200 */
+        }
+
+        #input-area > div {
+            display: flex;
+            gap: 0.75rem; /* space-x-3 */
+        }
+
+        #user-input {
+            flex-grow: 1;
+            padding: 0.75rem; /* p-3 */
+            border: 1px solid #d1d5db; /* border border-gray-300 */
+            border-radius: 0.5rem; /* rounded-lg */
+            transition: all 150ms ease-in-out;
+            resize: none;
+        }
+        #user-input:focus {
+            border-color: #ff00ff; 
+            outline: 2px solid #ff00ff; 
+            outline-offset: 1px;
+        }
+
+        /* Bouton d'envoi */
+        #send-button {
+            background-color: #800080; /* bg-blue-600 */
+            color: white;
+            padding: 0.75rem; /* p-3 */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* shadow-lg */
+            transition: background-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
             cursor: pointer;
         }
-        
-        .chat-container {
-            /* CORRECTION : Laisse le corps du chat prendre tout l'espace restant */
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            background-color: var(--bg-color);
-            scroll-behavior: smooth;
-            /* Utilise 'auto' et non 'scroll' pour éviter l'apparition de la barre de scroll si inutile */
-            overflow-y: auto; 
+        #send-button:hover:not(:disabled) {
+            background-color: #FF00A6; /* hover:bg-blue-700 */
+        }
+        #send-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5); /* focus:ring-4 focus:ring-blue-300 */
+        }
+        #send-button:disabled {
+            opacity: 0.5; /* disabled:opacity-50 */
+            cursor: not-allowed;
         }
 
-        .message {
-            max-width: 85%;
-            padding: 0.75rem 1rem;
-            margin-bottom: 0.75rem;
-            border-radius: 1rem;
-            line-height: 1.4;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            font-size: 0.9rem;
+        /* Icônes et Spinner */
+        #send-icon {
+            width: 1.5rem; /* w-6 */
+            height: 1.5rem; /* h-6 */
         }
-
-        .user-message {
-            background-color: var(--chat-bg-user);
-            color: #1f2937;
-            margin-left: auto;
-            border-bottom-right-radius: 0.25rem;
-        }
-
-        .ai-message {
-            background-color: var(--chat-bg-ai);
-            color: #1f2937;
-            margin-right: auto;
-            border-bottom-left-radius: 0.25rem;
-        }
-
-        .input-area {
-            /* Le pied de page/input doit avoir une hauteur fixe */
-            flex-shrink: 0;
-            display: flex;
-            padding: 1rem;
-            border-top: 1px solid #e5e7eb;
-            background-color: white;
-        }
-
-        .input-area input {
-            flex-grow: 1;
-            padding: 0.75rem 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-        }
-
-        .input-area button {
-            margin-left: 0.5rem;
-            background-color: var(--primary-color);
-            color: white;
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-        }
-        
-        /* Animation de chargement */
-        .loading-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            margin: 0 2px;
+        #spinner {
+            width: 1.25rem; /* w-5 */
+            height: 1.25rem; /* h-5 */
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: white;
             border-radius: 50%;
-            background-color: var(--primary-color);
-            animation: bounce 1.4s infinite ease-in-out both;
+            animation: spin 1s linear infinite;
         }
-        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
-        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
-        
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1.0); }
+        .hidden {
+            display: none !important;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Message d'erreur */
+        #error-message {
+            color: #ef4444; /* text-red-500 */
+            font-size: 0.875rem; /* text-sm */
+            margin-bottom: 0.5rem; /* mb-2 */
+        }
+
+        /* Message initial de chargement */
+        #loading-initial {
+            text-align: center;
+            color: #6b7280; /* text-gray-500 */
+            margin-top: 1rem; /* mt-4 */
+        }
+
+        /* Adaptation pour petits écrans (responsive) */
+        @media (min-width: 640px) {
+            /* Simuler sm:max-w-md */
+            .bot-message-bubble, .user-message-bubble {
+                max-width: 384px;
+            }
         }
     </style>
 </head>
-<body>
+<body id="page-body">
 
-<!-- Le bouton est désactivé dans l'iframe, le parent le gère -->
-<div id="chat-button" class="chat-button"></div>
-
-<!-- Conteneur du Chatbot (utilisé pour prendre toute la place de l'iframe) -->
-<div id="chat-widget-container" class="chat-widget-container open">
-    <div class="chat-header" id="chat-header-toggle">
-        <div class="flex items-center gap-2">
-            <!-- Icône de l'IA (lucide-react - bot) -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot"><path d="M12 11v-4"/><path d="M8 20l4-4 4 4"/><path d="M18 13c1.97 0 3.65-1.25 4.34-3A10 10 0 0 0 12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c1.7 0 3.32-0.45 4.74-1.25"/><path d="M16 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
-            <span>Yedi | Votre assistant AI_Y</span>
-        </div>
-        <!-- Icône pour fermer (lucide-react - minus). Envoie un signal au parent pour fermer l'iframe. -->
-        <svg xmlns="http://www.w3.org/2000/svg" id="close-button-internal" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus cursor-pointer"><path d="M5 12h14"/></svg>
-    </div>
-    
-    <div id="chat-container" class="chat-container">
-        <!-- Les messages du chat s'affichent ici -->
-    </div>
-
-    <div class="input-area">
-        <input type="text" id="user-input" placeholder="Demandez-nous nos services ou nos prix..." autofocus>
-        <button id="send-button">Envoyer</button>
-    </div>
-</div>
-
-<script>
-    // --- Configuration ---
-    // URL de votre API FastAPI hébergée sur Render (doit être HTTPS)
-    const API_URL = "https://max-chatbot-techsolutions-mvp.onrender.com"; 
-
-    // Éléments du DOM du widget
-    const chatContainer = document.getElementById('chat-container');
-    const userInput = document.getElementById('user-input');
-    const sendButton = document.getElementById('send-button');
-    const closeButtonInternal = document.getElementById('close-button-internal');
-
-    // --- Gestion de la Fermeture (Envoi d'un signal au parent) ---
-    closeButtonInternal.addEventListener('click', () => {
-        // Envoie un message au script parent (site_index.html) pour fermer l'iframe
-        window.parent.postMessage('close-chatbot', '*');
-    });
-
-    // --- Logique d'envoi du Message ---
-    let sessionId = localStorage.getItem('ai_y_session_id') || crypto.randomUUID();
-    let chatHistory = JSON.parse(localStorage.getItem('ai_y_history') || '[]');
-    let isWaitingForResponse = false;
-
-    localStorage.setItem('ai_y_session_id', sessionId);
-
-    function scrollToBottom() {
-        // Ajout d'un petit délai pour s'assurer que le DOM a bien mis à jour
-        setTimeout(() => {
-             chatContainer.scrollTop = chatContainer.scrollHeight;
-        }, 10);
-    }
-
-    function createMessageElement(text, role) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', role === 'user' ? 'user-message' : 'ai-message');
+    <!-- Chat Widget Container -->
+    <div id="chat-container">
         
-        let htmlText = text.replace(/\n\s*\*/g, (match) => `<br>•`).replace(/\n/g, '<br>');
-        
-        messageDiv.innerHTML = htmlText;
-        chatContainer.appendChild(messageDiv);
-        scrollToBottom();
-        return messageDiv;
-    }
+        <!-- Header -->
+        <header id="chat-header">
+            <h1>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Yedi votre assistant IA
+            </h1>
+            <span id="user-id-display">ID: Chargement...</span>
+        </header>
 
-    function addLoadingIndicator() {
-        const loadingDiv = document.createElement('div');
-        loadingDiv.id = 'loading-indicator';
-        loadingDiv.classList.add('ai-message', 'message');
-        loadingDiv.innerHTML = `
-            <div class="flex items-center space-x-1">
-                <span class="loading-dot"></span>
-                <span class="loading-dot"></span>
-                <span class="loading-dot"></span>
+        <!-- Messages Area -->
+        <div id="chat-messages">
+            <!-- Messages seront injectés ici -->
+            <div id="loading-initial">
+                <p>Connexion à la base de données...</p>
             </div>
-        `;
-        chatContainer.appendChild(loadingDiv);
-        scrollToBottom();
-    }
+        </div>
 
-    function removeLoadingIndicator() {
-        const indicator = document.getElementById('loading-indicator');
-        if (indicator) {
-            indicator.remove();
-        }
-    }
-    
-    async function sendMessage() {
-        if (isWaitingForResponse) return;
-        const message = userInput.value.trim();
-        if (message === "") return;
+        <!-- Input Area -->
+        <div id="input-area">
+            <div id="error-message" class="hidden"></div>
+            <div>
+                <textarea id="user-input"
+                          rows="1"
+                          placeholder="Écrivez votre message ici..."></textarea>
+                <button id="send-button" disabled>
+                    <svg id="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7-7l7 7-7 7"></path></svg>
+                    <div id="spinner" class="hidden"></div>
+                </button>
+            </div>
+        </div>
+    </div>
 
-        isWaitingForResponse = true;
-        sendButton.disabled = true;
-        userInput.value = '';
-        
-        createMessageElement(message, 'user');
+    <!-- Firebase Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        addLoadingIndicator();
-        
-        const userTurn = { role: 'user', text: message };
+        // Configuration Globale
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const apiKey = ""; // API Key for Gemini
 
-        try {
+        // Variables Firebase
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+
+        // Variables DOM
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const sendIcon = document.getElementById('send-icon');
+        const spinner = document.getElementById('spinner');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const errorMessageDiv = document.getElementById('error-message');
+        const loadingInitial = document.getElementById('loading-initial');
+
+        // --- Utility Functions ---
+
+        // Helper to convert a Firestore timestamp to a readable format
+        const formatTimestamp = (timestamp) => {
+            if (!timestamp) return 'Envoyé';
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        };
+
+        // Helper to display a temporary error message
+        const displayError = (message) => {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+            setTimeout(() => errorMessageDiv.classList.add('hidden'), 5000);
+        };
+
+        // Render a message in the UI
+        const renderMessage = (doc) => {
+            const data = doc.data();
+            const isUser = data.sender === 'user';
+            
+            // Determine container and bubble classes based on sender
+            const containerClass = isUser ? 'user-message-container' : 'bot-message-container';
+            const bubbleClass = isUser ? 'user-message-bubble' : 'bot-message-bubble';
+            
+            const messageHtml = `
+                <div class="message-container ${containerClass}">
+                    <div class="${bubbleClass}">
+                        <p class="message-text">${data.text}</p>
+                        <p class="message-timestamp">
+                            ${formatTimestamp(data.timestamp)}
+                        </p>
+                    </div>
+                </div>
+            `;
+            chatMessages.insertAdjacentHTML('beforeend', messageHtml);
+        };
+
+        // Scrolling function
+        const scrollToBottom = () => {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+
+        // --- Firebase Initialization and Authentication ---
+
+        const initializeFirebase = async () => {
+            try {
+                // setLogLevel('debug'); // Optional: for debugging Firestore issues
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Listen for authentication state changes
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        // Display only the first 8 characters of the ID
+                        userIdDisplay.textContent = `ID: ${userId.substring(0, 8)}...`;
+                        isAuthReady = true;
+                        sendButton.disabled = false;
+                        if (loadingInitial) loadingInitial.remove();
+                        setupChatListener();
+                    } else {
+                        // Attempt initial authentication
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase initialization error:", error);
+                displayError("Erreur de connexion à la base de données.");
+            }
+        };
+
+        // --- Firestore Logic ---
+
+        const getChatCollectionRef = () => {
+            // Use a public path for the chat: /artifacts/{appId}/public/data/chats
+            return collection(db, 'artifacts', appId, 'public', 'data', 'chats');
+        };
+
+        const setupChatListener = () => {
+            if (!db || !isAuthReady) return;
+
+            const chatRef = getChatCollectionRef();
+            // Query for messages, ordered by timestamp
+            const q = query(chatRef, orderBy('timestamp'));
+
+            // Real-time listener for messages
+            onSnapshot(q, (snapshot) => {
+                let hasNewMessage = false;
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        renderMessage(change.doc);
+                        hasNewMessage = true;
+                    }
+                    // Simple logic, ignores 'modified' and 'removed' for a basic chat
+                });
+                if (hasNewMessage) {
+                    scrollToBottom();
+                }
+            }, (error) => {
+                console.error("Chat listener error:", error);
+                displayError("Erreur de chargement des messages.");
+            });
+        };
+
+        const saveMessage = async (text, sender) => {
+            if (!db || !isAuthReady) {
+                displayError("Chat non initialisé. Veuillez réessayer.");
+                return;
+            }
+            try {
+                await addDoc(getChatCollectionRef(), {
+                    text: text,
+                    sender: sender,
+                    userId: userId, // Store user ID for identification
+                    timestamp: serverTimestamp()
+                });
+            } catch (e) {
+                console.error("Message saving error:", e);
+                displayError("Impossible d'enregistrer le message.");
+            }
+        };
+
+        // --- Gemini API Call Logic (Simulated) ---
+
+        const callGeminiAPI = async (prompt) => {
+            // Gemini API call configuration
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const systemPrompt = "Vous êtes un assistant IA amical, professionnel et concis. Répondez en français à l'utilisateur.";
+
             const payload = {
-                message: message,
-                session_id: sessionId,
-                history: chatHistory
+                contents: [{ parts: [{ text: prompt }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
             };
 
-            const response = await fetch(`${API_URL}/chat`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            const maxRetries = 3;
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Erreur HTTP: ${response.status} - ${errorData.error || response.statusText}`);
+                    if (!response.ok) {
+                        if (response.status === 429 && attempt < maxRetries - 1) {
+                            const delay = Math.pow(2, attempt) * 1000;
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            continue; // Retry
+                        }
+                        throw new Error(`API Error: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (text) {
+                        return text.trim();
+                    } else {
+                        return "Désolé, je n'ai pas pu générer de réponse. Le résultat de l'API était vide.";
+                    }
+                } catch (error) {
+                    console.error("Error during Gemini call:", error);
+                    return `Erreur lors de la communication avec l'IA: ${error.message}`;
+                }
             }
+            return "Échec de l'appel API après plusieurs tentatives.";
+        };
 
-            const data = await response.json();
-            const aiResponseText = data.response;
+        // --- UI Logic and Event Handling ---
 
-            removeLoadingIndicator();
-            
-            createMessageElement(aiResponseText, 'ai');
+        const handleSend = async () => {
+            const prompt = userInput.value.trim();
+            if (!prompt || !isAuthReady) return;
 
-            const modelTurn = { role: 'model', text: aiResponseText };
-            chatHistory.push(userTurn);
-            chatHistory.push(modelTurn);
-            localStorage.setItem('ai_y_history', JSON.stringify(chatHistory));
+            // 1. Disable UI
+            sendButton.disabled = true;
+            userInput.disabled = true;
+            sendIcon.classList.add('hidden');
+            spinner.classList.remove('hidden');
 
-        } catch (error) {
-            console.error("Erreur de l'API Chatbot:", error);
-            removeLoadingIndicator();
-            createMessageElement(`Désolé, une erreur de connexion est survenue. Le serveur est peut-être en redémarrage (Cold Start) ou hors ligne. Détails: ${error.message}`, 'ai');
-        } finally {
-            isWaitingForResponse = false;
+            // 2. Save user message
+            await saveMessage(prompt, 'user');
+            userInput.value = ''; // Clear input after sending
+
+            // 3. Call Gemini API and get response
+            const botResponse = await callGeminiAPI(prompt);
+
+            // 4. Save bot response
+            await saveMessage(botResponse, 'gemini');
+
+            // 5. Re-enable UI
             sendButton.disabled = false;
+            userInput.disabled = false;
+            sendIcon.classList.remove('hidden');
+            spinner.classList.add('hidden');
             userInput.focus();
-        }
-    }
+        };
 
-    // --- Initialisation ---
-    
-    function initializeChat() {
-        if (chatHistory.length === 0) {
-            const welcomeMessage = "Bonjour ! Je suis Yedi, l'assistant commercial IA d'AI_Y. Je peux vous fournir nos tarifs, nos services, et vous expliquer comment nous intégrons votre chatbot en moins de 72 heures. Comment pouvons-nous démarrer un projet pour vous aujourd'hui ?";
-            createMessageElement(welcomeMessage, 'ai');
-            const welcomeTurn = { role: 'model', text: welcomeMessage };
-            chatHistory.push(welcomeTurn);
-            localStorage.setItem('ai_y_history', JSON.stringify(chatHistory));
-        } else {
-            chatHistory.forEach(turn => {
-                createMessageElement(turn.text, turn.role);
-            });
-            scrollToBottom();
-        }
-    }
+        // Event listener for the send button click
+        sendButton.addEventListener('click', handleSend);
 
-    sendButton.addEventListener('click', sendMessage);
-    userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            sendMessage();
-        }
-    });
+        // Event listener for the Enter key in the textarea
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); // Prevent line break
+                handleSend();
+            }
+        });
 
-    userInput.addEventListener('input', () => {
-        sendButton.disabled = userInput.value.trim() === '' || isWaitingForResponse;
-    });
+        // Event listener for input change to update button state
+        userInput.addEventListener('input', () => {
+            if (isAuthReady) {
+                sendButton.disabled = userInput.value.trim() === '';
+            }
+        });
 
-    // Démarre l'application
-    initializeChat();
+        // Start the application
+        window.onload = initializeFirebase;
 
-</script>
-
+    </script>
 </body>
 </html>
