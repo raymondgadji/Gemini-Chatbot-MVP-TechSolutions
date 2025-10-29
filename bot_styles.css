@@ -130,7 +130,7 @@ body {
 /* === BOT MESSAGE === */
 .bot-message-bubble {
     background-color: var(--bg-light);
-    padding: 0.75rem;
+    padding: 0.80rem;
     max-width: 80%;
     border-radius: 0.75rem;
     border-bottom-right-radius: 0.25rem;
