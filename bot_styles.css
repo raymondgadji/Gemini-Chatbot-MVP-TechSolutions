@@ -94,7 +94,7 @@ body {
 /* === MESSAGES AREA === */
 #chat-messages {
     flex-grow: 1;
-    padding: 1rem;
+    padding: 2rem;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -178,7 +178,7 @@ body {
 
 /* === INPUT AREA === */
 #input-area {
-    padding: 2rem;
+    padding: 1rem;
     border-top: 1px solid var(--border);
 }
 
