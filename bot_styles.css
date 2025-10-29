@@ -1,0 +1,268 @@
+/* === POLICE MONTSERRAT (LOCAL) === */
+@font-face {
+    font-family: 'Montserrat';
+    src: url('../fonts/montserrat/Montserrat-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Montserrat';
+    src: url('../fonts/montserrat/Montserrat-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Montserrat';
+    src: url('../fonts/montserrat/Montserrat-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
+/* === VARIABLES === */
+:root {
+    --primary: #800080;
+    --secondary: #ff00ff;
+    --hover-secondary: #FF00A6;
+    --bg-light: #f3f4f6;
+    --text-dark: #1f2937;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --error: #ef4444;
+}
+
+/* === BASE === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: var(--bg-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1rem;
+}
+
+/* === CHAT CONTAINER === */
+#chat-container {
+    width: 100%;
+    max-width: 512px;
+    background-color: white;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border-radius: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    min-height: 500px;
+}
+
+/* === HEADER === */
+#chat-header {
+    background-color: var(--primary);
+    color: white;
+    padding: 1rem;
+    border-top-left-radius: 0.75rem;
+    border-top-right-radius: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+#chat-header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+}
+
+#chat-header svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 0.5rem;
+}
+
+#user-id-display {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+/* === MESSAGES AREA === */
+#chat-messages {
+    flex-grow: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Scrollbar */
+#chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+#chat-messages::-webkit-scrollbar-track {
+    background: var(--bg-light);
+}
+#chat-messages::-webkit-scrollbar-thumb {
+    background-color: var(--text-muted);
+    border-radius: 20px;
+    border: 2px solid var(--bg-light);
+}
+
+/* === MESSAGE CONTAINERS === */
+.message-container {
+    display: flex;
+}
+
+.bot-message-container {
+    justify-content: flex-start;
+}
+
+.user-message-container {
+    justify-content: flex-end;
+}
+
+/* === BOT MESSAGE === */
+.bot-message-bubble {
+    background-color: var(--bg-light);
+    padding: 0.75rem;
+    max-width: 80%;
+    border-radius: 0.75rem;
+    border-bottom-right-radius: 0.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-right: auto;
+    word-wrap: break-word;
+}
+
+.welcome-message .bot-message-bubble {
+    max-width: 100%;
+}
+
+/* === USER MESSAGE === */
+.user-message-bubble {
+    background-color: var(--secondary);
+    color: white;
+    padding: 0.75rem;
+    max-width: 80%;
+    border-radius: 0.75rem;
+    border-bottom-left-radius: 0.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-left: auto;
+    word-wrap: break-word;
+}
+
+/* === TEXT & TIME === */
+.message-text {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.message-timestamp {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    text-align: right;
+}
+
+.bot-message-bubble .message-timestamp {
+    color: var(--text-muted);
+}
+
+.user-message-bubble .message-timestamp {
+    opacity: 0.8;
+}
+
+/* === INPUT AREA === */
+#input-area {
+    padding: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.input-wrapper {
+    display: flex;
+    gap: 0.75rem;
+}
+
+#user-input {
+    flex-grow: 1;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    resize: none;
+    font-family: inherit;
+    transition: all 0.15s ease-in-out;
+}
+
+#user-input:focus {
+    outline: none;
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 2px rgba(255, 0, 255, 0.2);
+}
+
+/* === SEND BUTTON === */
+#send-button {
+    background-color: var(--primary);
+    color: white;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.15s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    min-width: 48px;
+}
+
+#send-button:hover:not(:disabled) {
+    background-color: var(--hover-secondary);
+}
+
+#send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#send-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* === SPINNER === */
+#spinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* === UTILS === */
+.hidden {
+    display: none !important;
+}
+
+#error-message {
+    color: var(--error);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+/* === RESPONSIVE === */
+@media (min-width: 640px) {
+    .bot-message-bubble,
+    .user-message-bubble {
+        max-width: 384px;
+    }
+}
