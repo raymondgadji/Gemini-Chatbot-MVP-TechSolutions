@@ -8,41 +8,28 @@
     <style>
         /* Configuration de la police Inter */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-        
-        /* 1. Correction du Positionnement : Le body n'est plus centré */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Montserrat', sans-serif;
             background-color: #f3f4f6; /* bg-gray-100 */
-            margin: 0;
-            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             min-height: 100vh;
+            padding: 1rem; /* p-4 */
+            margin: 0;
         }
 
-        /* NOUVEAU CONTENEUR FLOTTANT (position: fixed) */
-        #floating-chat-widget {
-            position: fixed;
-            bottom: 20px; /* Espace du bas */
-            right: 20px; /* Espace de droite */
-            z-index: 1000;
-            width: 100%;
-            max-width: 400px; /* Taille maximale typique pour un widget */
-            height: 90vh; /* Hauteur relative pour mobile */
-            max-height: 600px; /* Hauteur maximale sur desktop */
-            /* Ajout d'une animation pour un effet plus doux à l'ouverture */
-            transition: transform 0.3s ease-in-out;
-            transform-origin: bottom right;
-        }
-        
         /* Conteneur principal du Chat Widget */
         #chat-container {
             width: 100%;
-            height: 100%;
+            max-width: 512px; /* max-w-lg */
             background-color: white;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* shadow-2xl */
             border-radius: 0.75rem; /* rounded-xl */
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Important pour les coins arrondis */
+            height: 80vh; /* h-[80vh] */
+            min-height: 500px;
         }
 
         /* En-tête */
@@ -50,11 +37,11 @@
             background-color: #800080; 
             color: white;
             padding: 1rem; /* p-4 */
-            /* Les coins arrondis sont gérés par le conteneur principal grâce à overflow: hidden */
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
             display: flex;
-            flex-direction: column; /* Changé pour empiler titre et ID */
-            justify-content: center;
-            align-items: flex-start;
+            justify-content: space-between;
+            align-items: center;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* shadow-md */
         }
         #chat-header h1 {
@@ -62,7 +49,6 @@
             font-weight: 700; /* font-bold */
             display: flex;
             align-items: center;
-            margin: 0 0 0.25rem 0; /* Petit espacement après le titre */
         }
         #chat-header svg {
             width: 1.5rem; /* w-6 */
@@ -71,8 +57,7 @@
         }
         #user-id-display {
             font-size: 0.75rem; /* text-xs */
-            opacity: 0.8; /* Légère opacité pour le distinguer */
-            word-break: break-all; /* Assurer que l'ID ne dépasse pas */
+            opacity: 0.7; /* opacity-70 */
         }
 
         /* Zone des messages */
@@ -83,7 +68,6 @@
             display: flex;
             flex-direction: column;
             gap: 1rem; /* space-y-4 */
-            scroll-behavior: smooth;
             scrollbar-width: thin;
             scrollbar-color: #9ca3af #f3f4f6;
         }
@@ -112,9 +96,9 @@
         .bot-message-bubble {
             background-color: #f3f4f6; /* light gray for bot */
             padding: 0.75rem; /* p-3 */
-            max-width: 85%; /* Augmenté légèrement pour les petits écrans */
+            max-width: 80%; /* max-w-xs/sm:max-w-md */
             border-radius: 0.75rem;
-            border-bottom-left-radius: 0.25rem; /* Changement pour correspondre à l'alignement */
+            border-bottom-right-radius: 0.25rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
             margin-right: auto; /* mr-auto */
             word-wrap: break-word;
@@ -128,9 +112,9 @@
             background-color: #ff00ff; /* blue for user */
             color: white;
             padding: 0.75rem; /* p-3 */
-            max-width: 85%; /* Augmenté légèrement pour les petits écrans */
+            max-width: 80%; /* max-w-xs/sm:max-w-md */
             border-radius: 0.75rem;
-            border-bottom-right-radius: 0.25rem;
+            border-bottom-left-radius: 0.25rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
             margin-left: auto; /* ml-auto */
             word-wrap: break-word;
@@ -139,14 +123,12 @@
         .message-text {
             font-size: 0.875rem; /* text-sm */
             margin-bottom: 0.25rem;
-            white-space: pre-wrap; /* Pour respecter les sauts de ligne du LLM */
         }
 
         .message-timestamp {
             font-size: 0.75rem; /* text-xs */
             margin-top: 0.25rem; /* mt-1 */
             text-align: right;
-            display: block; /* S'assurer qu'il prend toute la ligne */
         }
         .bot-message-bubble .message-timestamp {
             color: #6b7280; /* text-gray-500 */
@@ -173,10 +155,6 @@
             border-radius: 0.5rem; /* rounded-lg */
             transition: all 150ms ease-in-out;
             resize: none;
-            line-height: 1.5; /* Meilleure lisibilité */
-            height: 40px; /* Hauteur initiale minimale */
-            max-height: 100px; /* Hauteur maximale pour éviter de prendre tout l'écran */
-            overflow-y: auto;
         }
         #user-input:focus {
             border-color: #ff00ff; 
@@ -186,7 +164,7 @@
 
         /* Bouton d'envoi */
         #send-button {
-            background-color: #800080; /* bg-purple-600 */
+            background-color: #800080; /* bg-blue-600 */
             color: white;
             padding: 0.75rem; /* p-3 */
             border-radius: 0.5rem; /* rounded-lg */
@@ -197,14 +175,13 @@
             justify-content: center;
             border: none;
             cursor: pointer;
-            height: 40px; /* Adapter à la hauteur du textarea */
         }
         #send-button:hover:not(:disabled) {
-            background-color: #FF00A6; /* couleur plus vive au survol */
+            background-color: #FF00A6; /* hover:bg-blue-700 */
         }
         #send-button:focus {
             outline: none;
-            box-shadow: 0 0 0 4px rgba(128, 0, 128, 0.3); /* focus ring sur le violet */
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5); /* focus:ring-4 focus:ring-blue-300 */
         }
         #send-button:disabled {
             opacity: 0.5; /* disabled:opacity-50 */
@@ -236,7 +213,6 @@
             color: #ef4444; /* text-red-500 */
             font-size: 0.875rem; /* text-sm */
             margin-bottom: 0.5rem; /* mb-2 */
-            text-align: center;
         }
 
         /* Message initial de chargement */
@@ -247,64 +223,52 @@
         }
 
         /* Adaptation pour petits écrans (responsive) */
-        @media (max-width: 640px) {
-            #floating-chat-widget {
-                bottom: 0;
-                right: 0;
-                max-width: 100%;
-                height: 100vh;
-                max-height: 100vh;
-                border-radius: 0;
-            }
-            #chat-container {
-                border-radius: 0;
+        @media (min-width: 640px) {
+            /* Simuler sm:max-w-md */
+            .bot-message-bubble, .user-message-bubble {
+                max-width: 384px;
             }
         }
     </style>
 </head>
 <body id="page-body">
 
-    <!-- NOUVEAU CONTENEUR FLOTTANT -->
-    <div id="floating-chat-widget">
-        <!-- Chat Widget Container -->
-        <div id="chat-container">
-            
-            <!-- Header -->
-            <header id="chat-header">
-                <h1>
-                    <!-- Icône d'Assistant -->
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Yedi votre assistant IA
-                </h1>
-                <span id="user-id-display">ID: Chargement...</span>
-            </header>
+    <!-- Chat Widget Container -->
+    <div id="chat-container">
+        
+        <!-- Header -->
+        <header id="chat-header">
+            <h1>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Yedi votre assistant IA
+            </h1>
+            <span id="user-id-display">ID: Chargement...</span>
+        </header>
 
-            <!-- Messages Area -->
-            <div id="chat-messages">
-                <!-- Messages seront injectés ici -->
-                <div id="loading-initial">
-                    <p>Connexion à la base de données...</p>
-                </div>
+        <!-- Messages Area -->
+        <div id="chat-messages">
+            <!-- Messages seront injectés ici -->
+            <div id="loading-initial">
+                <p>Connexion à la base de données...</p>
             </div>
+        </div>
 
-            <!-- Input Area -->
-            <div id="input-area">
-                <div id="error-message" class="hidden"></div>
-                <div>
-                    <textarea id="user-input"
-                              rows="1"
-                              placeholder="Écrivez votre message ici..."></textarea>
-                    <button id="send-button" disabled>
-                        <!-- Icône d'Envoi -->
-                        <svg id="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7-7l7 7-7 7"></path></svg>
-                        <div id="spinner" class="hidden"></div>
-                    </button>
-                </div>
+        <!-- Input Area -->
+        <div id="input-area">
+            <div id="error-message" class="hidden"></div>
+            <div>
+                <textarea id="user-input"
+                          rows="1"
+                          placeholder="Écrivez votre message ici..."></textarea>
+                <button id="send-button" disabled>
+                    <svg id="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7-7l7 7-7 7"></path></svg>
+                    <div id="spinner" class="hidden"></div>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Firebase Imports and JavaScript Logic -->
+    <!-- Firebase Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -338,8 +302,7 @@
         // Helper to convert a Firestore timestamp to a readable format
         const formatTimestamp = (timestamp) => {
             if (!timestamp) return 'Envoyé';
-            // Use date.toMillis() for firestore server timestamp if available, otherwise assume JS Date
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp.seconds * 1000); 
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
             return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
         };
 
@@ -349,19 +312,10 @@
             errorMessageDiv.classList.remove('hidden');
             setTimeout(() => errorMessageDiv.classList.add('hidden'), 5000);
         };
-        
-        // Adjusts textarea height automatically
-        const autoResizeTextarea = () => {
-            userInput.style.height = 'auto'; // Reset height
-            userInput.style.height = userInput.scrollHeight + 'px'; // Set to scroll height
-        };
 
         // Render a message in the UI
         const renderMessage = (doc) => {
             const data = doc.data();
-            const existingElement = document.getElementById(`msg-${doc.id}`);
-            if (existingElement) return; // Prevent duplicates
-
             const isUser = data.sender === 'user';
             
             // Determine container and bubble classes based on sender
@@ -369,7 +323,7 @@
             const bubbleClass = isUser ? 'user-message-bubble' : 'bot-message-bubble';
             
             const messageHtml = `
-                <div id="msg-${doc.id}" class="message-container ${containerClass}">
+                <div class="message-container ${containerClass}">
                     <div class="${bubbleClass}">
                         <p class="message-text">${data.text}</p>
                         <p class="message-timestamp">
@@ -383,17 +337,14 @@
 
         // Scrolling function
         const scrollToBottom = () => {
-            // Utiliser setTimeout pour s'assurer que le DOM est mis à jour après l'injection de message
-            setTimeout(() => {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }, 100);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         };
 
         // --- Firebase Initialization and Authentication ---
 
         const initializeFirebase = async () => {
             try {
-                // setLogLevel('debug'); // Décommenter pour le débogage de Firestore
+                // setLogLevel('debug'); // Optional: for debugging Firestore issues
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
@@ -402,24 +353,17 @@
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         userId = user.uid;
-                        // 2. CORRECTION : Afficher l'ID complet de l'utilisateur
-                        userIdDisplay.textContent = `ID: ${userId}`; 
+                        // Display only the first 8 characters of the ID
+                        userIdDisplay.textContent = `ID: ${userId.substring(0, 8)}...`;
                         isAuthReady = true;
-                        sendButton.disabled = userInput.value.trim() === '';
+                        sendButton.disabled = false;
                         if (loadingInitial) loadingInitial.remove();
                         setupChatListener();
-                        userInput.focus();
                     } else {
                         // Attempt initial authentication
-                        try {
-                             if (initialAuthToken) {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                            } else {
-                                await signInAnonymously(auth);
-                            }
-                        } catch (e) {
-                            console.error("Authentication failed, falling back to anonymous:", e);
-                            // Fallback to anonymous sign-in if token fails or is missing
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
                             await signInAnonymously(auth);
                         }
                     }
@@ -442,7 +386,6 @@
 
             const chatRef = getChatCollectionRef();
             // Query for messages, ordered by timestamp
-            // NOTE: orderBy('timestamp') is used. If Firestore requires an index, it will generate a console warning with a link to create it.
             const q = query(chatRef, orderBy('timestamp'));
 
             // Real-time listener for messages
@@ -450,11 +393,8 @@
                 let hasNewMessage = false;
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "added") {
-                        // Check if the message is already rendered by its ID to prevent re-rendering on the initial load
-                        if (!document.getElementById(`msg-${change.doc.id}`)) {
-                             renderMessage(change.doc);
-                             hasNewMessage = true;
-                        }
+                        renderMessage(change.doc);
+                        hasNewMessage = true;
                     }
                     // Simple logic, ignores 'modified' and 'removed' for a basic chat
                 });
@@ -473,7 +413,6 @@
                 return;
             }
             try {
-                // Add a temporary ID for immediate rendering (although onSnapshot handles real-time sync)
                 await addDoc(getChatCollectionRef(), {
                     text: text,
                     sender: sender,
@@ -486,12 +425,12 @@
             }
         };
 
-        // --- Gemini API Call Logic ---
+        // --- Gemini API Call Logic (Simulated) ---
 
         const callGeminiAPI = async (prompt) => {
             // Gemini API call configuration
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const systemPrompt = "Vous êtes Yedi, un assistant IA amical et professionnel. Répondez en français à l'utilisateur de manière concise et utile. Vous pouvez utiliser Google Search pour des informations à jour.";
+            const systemPrompt = "Vous êtes un assistant IA amical, professionnel et concis. Répondez en français à l'utilisateur.";
 
             const payload = {
                 contents: [{ parts: [{ text: prompt }] }],
@@ -516,7 +455,7 @@
                             await new Promise(resolve => setTimeout(resolve, delay));
                             continue; // Retry
                         }
-                        throw new Error(`API Error: ${response.status} - ${response.statusText}`);
+                        throw new Error(`API Error: ${response.statusText}`);
                     }
 
                     const result = await response.json();
@@ -525,20 +464,11 @@
                     if (text) {
                         return text.trim();
                     } else {
-                        // Check for blocked content or safety issues
-                        const finishReason = result.candidates?.[0]?.finishReason;
-                        if (finishReason === 'SAFETY') {
-                             return "Désolé, votre demande a été bloquée pour des raisons de sécurité.";
-                        }
                         return "Désolé, je n'ai pas pu générer de réponse. Le résultat de l'API était vide.";
                     }
                 } catch (error) {
-                    // Log the error but don't stop the UI from re-enabling
                     console.error("Error during Gemini call:", error);
-                    // On the last attempt, return an error message
-                    if (attempt === maxRetries - 1) {
-                         return `Erreur lors de la communication avec l'IA: ${error.message}`;
-                    }
+                    return `Erreur lors de la communication avec l'IA: ${error.message}`;
                 }
             }
             return "Échec de l'appel API après plusieurs tentatives.";
@@ -548,19 +478,18 @@
 
         const handleSend = async () => {
             const prompt = userInput.value.trim();
-            if (!prompt || !isAuthReady || sendButton.disabled) return;
+            if (!prompt || !isAuthReady) return;
 
             // 1. Disable UI
             sendButton.disabled = true;
             userInput.disabled = true;
             sendIcon.classList.add('hidden');
             spinner.classList.remove('hidden');
-            userInput.value = ''; // Clear input immediately
 
             // 2. Save user message
-            // Note: Since saveMessage uses serverTimestamp, the onSnapshot listener will handle rendering
             await saveMessage(prompt, 'user');
-            
+            userInput.value = ''; // Clear input after sending
+
             // 3. Call Gemini API and get response
             const botResponse = await callGeminiAPI(prompt);
 
@@ -573,7 +502,6 @@
             sendIcon.classList.remove('hidden');
             spinner.classList.add('hidden');
             userInput.focus();
-            autoResizeTextarea(); // Reset textarea size
         };
 
         // Event listener for the send button click
@@ -587,14 +515,13 @@
             }
         });
 
-        // Event listener for input change to update button state and size
+        // Event listener for input change to update button state
         userInput.addEventListener('input', () => {
-            autoResizeTextarea();
             if (isAuthReady) {
                 sendButton.disabled = userInput.value.trim() === '';
             }
         });
-        
+
         // Start the application
         window.onload = initializeFirebase;
 
