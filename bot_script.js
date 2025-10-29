@@ -7,10 +7,10 @@ const spinner = document.getElementById('spinner');
 const errorMessageDiv = document.getElementById('error-message');
 
 // === CONFIGURATION ===
-const API_URL = "https://max-chatbot-techsolutions-mvp.onrender.com"; // ← Remplace par ton URL
+const API_URL = "https://max-chatbot-techsolutions-mvp.onrender.com/chat";  // TON URL RENDER
 const SESSION_ID = "local_" + Date.now();
 
-// Historique complet (user/model)
+// Historique (user/model)
 let history = [];
 
 // === FONCTIONS UTILITAIRES ===
@@ -52,9 +52,26 @@ const displayError = (msg) => {
     setTimeout(() => errorMessageDiv.classList.add('hidden'), 5000);
 };
 
+// === Fallback Réponses (basées sur context.py) ===
+const getFallbackResponse = (message) => {
+    const lower = message.toLowerCase();
+    if (lower.includes('bonjour') || lower.includes('salut')) {
+        return "Bonjour ! Ravi de vous rencontrer. En quoi puis-je vous aider avec les chatbots IA d'AI_Y aujourd'hui ?";
+    }
+    if (lower.includes('prix') || lower.includes('tarif')) {
+        return "Nos tarifs : Installation 750€ HT une fois, puis 99,99€ HT/mois (5 000 messages inclus). Messages supp. : 0,005€.";
+    }
+    if (lower.includes('délai') || lower.includes('temps')) {
+        return "Mise en œuvre en 72h ! Fournissez votre FAQ et c'est prêt.";
+    }
+    if (lower.includes('contact')) {
+        return "Contactez-nous pour une démo gratuite : contact@ai-y.fr ou 'Démarrer un projet' sur le site.";
+    }
+    return "Je suis Yedi d'AI_Y. Posez-moi une question sur nos chatbots pour PME ! (API temporairement indisponible)";
+};
+
 // === APPEL À TON API FASTAPI ===
-const sendToAPI = async (message) => {
-    // Ajouter au history
+const sendToAPI = async (message, retryCount = 0) => {
     history.push({ role: "user", text: message });
 
     try {
@@ -68,7 +85,15 @@ const sendToAPI = async (message) => {
             })
         });
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        console.log(`API Response Status: ${response.status}`);  // Debug
+
+        if (!response.ok) {
+            if (response.status === 429 && retryCount < 2) {
+                await new Promise(r => setTimeout(r, 2000 * (retryCount + 1)));
+                return sendToAPI(message, retryCount + 1);
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
 
         const data = await response.json();
         if (data.error) throw new Error(data.error);
@@ -78,8 +103,12 @@ const sendToAPI = async (message) => {
         return botResponse;
 
     } catch (err) {
-        console.error("API Error:", err);
-        return "Erreur de connexion. Veuillez réessayer.";
+        console.error("API Error Details:", err);
+        if (retryCount < 2) {
+            await new Promise(r => setTimeout(r, 1000 * (retryCount + 1)));
+            return sendToAPI(message, retryCount + 1);
+        }
+        return getFallbackResponse(message);  // Fallback si API down
     }
 };
 
