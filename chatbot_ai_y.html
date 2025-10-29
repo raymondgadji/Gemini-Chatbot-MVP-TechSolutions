@@ -7,7 +7,7 @@
     <!-- Le code utilise désormais du CSS standard, plus besoin de Tailwind -->
     <style>
         /* Configuration de la police Inter */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap');
         body {
             font-family: 'Montserrat', sans-serif;
             background-color: #f3f4f6; /* bg-gray-100 */
@@ -258,8 +258,8 @@
             <div id="error-message" class="hidden"></div>
             <div>
                 <textarea id="user-input"
-                          rows="1"
-                          placeholder="Écrivez votre message ici..."></textarea>
+                            rows="1"
+                            placeholder="Écrivez votre message ici..."></textarea>
                 <button id="send-button" disabled>
                     <svg id="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7-7l7 7-7 7"></path></svg>
                     <div id="spinner" class="hidden"></div>
@@ -340,44 +340,52 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         };
 
-        // --- Firebase Initialization and Authentication ---
+        // --- Firebase Initialization and Authentication (CORRECTED) ---
 
         const initializeFirebase = async () => {
             try {
-                // setLogLevel('debug'); // Optional: for debugging Firestore issues
+                // setLogLevel('debug'); // Laissez ceci désactivé par défaut
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
 
-                // Listen for authentication state changes
+                // Écoute des changements d'état d'authentification
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
+                        // Utilisateur authentifié ou nouvellement signé
                         userId = user.uid;
-                        // Display only the first 8 characters of the ID
-                        userIdDisplay.textContent = `ID: ${userId.substring(0, 8)}...`;
+                        // AFFICHAGE DE L'ID COMPLET COMME REQUIS
+                        userIdDisplay.textContent = `ID: ${userId}`; 
                         isAuthReady = true;
-                        sendButton.disabled = false;
+                        sendButton.disabled = userInput.value.trim() === ''; // Activer si l'input n'est pas vide
                         if (loadingInitial) loadingInitial.remove();
                         setupChatListener();
                     } else {
-                        // Attempt initial authentication
-                        if (initialAuthToken) {
-                            await signInWithCustomToken(auth, initialAuthToken);
-                        } else {
-                            await signInAnonymously(auth);
+                        // Tente l'authentification initiale si non connecté
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (authError) {
+                            console.error("Firebase Auth Error:", authError);
+                            displayError("Erreur d'authentification (jeton invalide ou autre).");
                         }
                     }
                 });
             } catch (error) {
                 console.error("Firebase initialization error:", error);
-                displayError("Erreur de connexion à la base de données.");
+                // Afficher l'erreur de connexion
+                displayError("Erreur de connexion à la base de données."); 
+                if (loadingInitial) loadingInitial.querySelector('p').textContent = "Erreur de connexion à la base de données.";
             }
         };
 
         // --- Firestore Logic ---
 
         const getChatCollectionRef = () => {
-            // Use a public path for the chat: /artifacts/{appId}/public/data/chats
+            // Path de collection publique: /artifacts/{appId}/public/data/chats
             return collection(db, 'artifacts', appId, 'public', 'data', 'chats');
         };
 
@@ -385,10 +393,15 @@
             if (!db || !isAuthReady) return;
 
             const chatRef = getChatCollectionRef();
-            // Query for messages, ordered by timestamp
-            const q = query(chatRef, orderBy('timestamp'));
+            // Query pour les messages, ordonnés par timestamp
+            // ATTENTION: La fonction orderBy() peut causer des erreurs d'index.
+            // Pour ce chat simple, nous la laissons pour l'ordre initial.
+            const q = query(chatRef, orderBy('timestamp', 'asc'));
 
-            // Real-time listener for messages
+            // Nettoyer les anciens messages avant d'ajouter le listener
+            chatMessages.innerHTML = '';
+
+            // Real-time listener pour les messages
             onSnapshot(q, (snapshot) => {
                 let hasNewMessage = false;
                 snapshot.docChanges().forEach((change) => {
@@ -396,7 +409,6 @@
                         renderMessage(change.doc);
                         hasNewMessage = true;
                     }
-                    // Simple logic, ignores 'modified' and 'removed' for a basic chat
                 });
                 if (hasNewMessage) {
                     scrollToBottom();
@@ -425,10 +437,9 @@
             }
         };
 
-        // --- Gemini API Call Logic (Simulated) ---
+        // --- Gemini API Call Logic ---
 
         const callGeminiAPI = async (prompt) => {
-            // Gemini API call configuration
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             const systemPrompt = "Vous êtes un assistant IA amical, professionnel et concis. Répondez en français à l'utilisateur.";
 
@@ -464,7 +475,9 @@
                     if (text) {
                         return text.trim();
                     } else {
-                        return "Désolé, je n'ai pas pu générer de réponse. Le résultat de l'API était vide.";
+                        // Tenter de détecter une erreur dans la réponse API
+                        const errorMessage = result.error?.message || "Désolé, je n'ai pas pu générer de réponse. Le résultat de l'API était vide ou incomplet.";
+                        return errorMessage;
                     }
                 } catch (error) {
                     console.error("Error during Gemini call:", error);
@@ -478,17 +491,18 @@
 
         const handleSend = async () => {
             const prompt = userInput.value.trim();
-            if (!prompt || !isAuthReady) return;
+            if (!prompt || !isAuthReady || sendButton.disabled) return;
 
             // 1. Disable UI
             sendButton.disabled = true;
             userInput.disabled = true;
             sendIcon.classList.add('hidden');
             spinner.classList.remove('hidden');
+            userInput.value = ''; // Clear input immediately for better UX
 
             // 2. Save user message
+            // Note: Le message n'apparaîtra qu'après le onSnapshot (temps réel)
             await saveMessage(prompt, 'user');
-            userInput.value = ''; // Clear input after sending
 
             // 3. Call Gemini API and get response
             const botResponse = await callGeminiAPI(prompt);
@@ -497,8 +511,8 @@
             await saveMessage(botResponse, 'gemini');
 
             // 5. Re-enable UI
-            sendButton.disabled = false;
             userInput.disabled = false;
+            sendButton.disabled = userInput.value.trim() === '';
             sendIcon.classList.remove('hidden');
             spinner.classList.add('hidden');
             userInput.focus();
